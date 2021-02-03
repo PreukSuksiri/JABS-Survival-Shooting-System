@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target":"esnext"
+  },
+  "include": [
+    "./*",
+    "./plugins_dev/*.js",
+    "./plugins/*.js"
+  ],
+  "exclude": [
+    "./plugins/*"
+  ]
+}

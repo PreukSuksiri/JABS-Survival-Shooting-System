@@ -1,0 +1,121 @@
+===============================================================================
+August 23, 2020 - Update #1
+===============================================================================
+
+-
+
+Sample Project
+* Added two new NPC's
+** Wiki Robot
+** Troubleshooting Robot
+
+-
+
+Core Engine Version 1.01:
+* Bug Fixes!
+** Digit grouping fixed to allow text codes to detect values larger than
+   1000. Fix made by Olivia and Yanfly.
+** Param Plus, Rate, Flat notetags fixed. Fix made by Yanfly.
+* New Experimental Feature Added:
+** JS: Quick Functions found in the Plugin Parameters
+
+-
+
+Battle Core Version 1.01:
+* Bug Fixes!
+** Plugin Parameters > Damage Settings > Damage Formats are now fixed.
+   Fix made by Olivia.
+** TPB Battle System with Disable Party Command fixed. Fix made by Olivia.
+** States now show in list format if faces are disabled. Fix made by Yanfly.
+** The default damage styles were missing the 'v' variable to allow for
+   variable data input. These are back now. Fix made by Yanfly.
+*** Users updating from version 1.00 will need to fix this problem by either
+    removing the plugin from the Plugin Manager list and reinstalling it, or
+    going to Plugin Parameters > Damage Settings > Style List > the style
+    you want, and adding "const v = $gameVariables._data;" to JS: Formula
+* New Notetags Added:
+** <Command Show Switch: x> added by Olivia
+** <Command Show All Switches: x,x,x> added by Olivia
+** <Command Show Any Switches: x,x,x> added by Olivia
+** <Command Hide Switch: x> added by Olivia
+** <Command Hide All Switches: x,x,x> added by Olivia
+** <Command Hide Any Switches: x,x,x> added by Olivia
+** <JS Command Visible> added by Olivia
+
+-
+
+Elements & Status Menu Core Version 1.01:
+* Bug Fixes!
+** Passive states now work with Skills & States Core. Fix made by Yanfly.
+** Fixed S parameters not working. Fix made by Yanfly.
+
+-
+
+Events & Movement Core Version 1.01:
+* Bug Fixes!
+** Event Cache issues fixed upon loading a saved game. Fix made by Yanfly.
+
+-
+
+Items & Equips Core Version 1.01:
+* Added failsafe to prevent non-existent equipment (because the database
+  entries have been deleted) from being equipped as initial equipment.
+  Fix made by Olivia.
+
+-
+
+Main Menu Core Version 1.01:
+* Bug Fixes!
+** Skill check plugin parameter for show fixed. Fixed by Yanfly and Shaz.
+*** Users updating from version 1.00 will need to fix this problem by either
+    removing the plugin from the Plugin Manager list and reinstalling it, or
+    going to Plugin Parameters > Command Window List > skill >
+    JS: Show > and changing 'this.needsCommand("item")' to
+    'this.needsCommand("skill")'
+
+-
+
+Message Core Version 1.01:
+* Bug Fixes!
+** </Wordwrap> now works.
+** \ActorFace[x] text code now fixed.
+*** Users updating from version 1.00 will need to fix this problem by either
+    removing the plugin from the Plugin Manager list and reinstalling it, or
+    going to Plugin Parameters > Text Code Replacements > ActorFace >
+    JS: Text > and changing "$gameActors.actor(1)" to
+    "$gameActors.actor(actorId)"
+** Actors with empty names would cause auto hightlight problems. Fixed!
+** Auto-colors now ignore names with special characters like !, ?, [, ], and
+   so on.
+** Line break spacing fixed.
+* New Features!
+** Wordwrap now works with <left>, <center> and <right> alignment tags.
+
+-
+
+Skills & States Core Version 1.01:
+* Bug Fixes!
+** Passive states from Elements & Status Menu Core are now functional.
+   Fix made by Olivia.
+* Compatibility Update
+** Extended functions to allow for better compatibility.
+* Updated documentation
+** Explains that passive states are not directly applied and are therefore
+   not affected by code such as "a.isStateAffected(10)".
+** Instead, use "a.states().includes($dataStates[10])"
+** "Use #rrggbb for a hex color." lines now replaced with
+   "For a hex color, use #rrggbb with VisuMZ_1_MessageCore"
+
+-
+
+===============================================================================
+August 20, 2020 - Release
+===============================================================================
+
+* Release!
+** Have fun everybody!
+** We need to go sleep...
+
+===============================================================================
+End of File
+===============================================================================
