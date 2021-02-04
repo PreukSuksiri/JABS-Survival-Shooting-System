@@ -2992,7 +2992,7 @@ Game_BattleMap.prototype.handleAbsInput = function() {
   }
 
   // menu
-  if (Input.isTriggered(J.ABS.Input.Start) || Input.isTriggered("escape")) {
+  if (Input.isTriggered(J.ABS.Input.Start) || Input.isTriggered("escape") || Input.isTriggered("cancel")) {
     this.performMenuAction();
   }
 }
