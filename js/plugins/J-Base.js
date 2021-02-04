@@ -589,8 +589,8 @@ Game_Character.prototype.callCommonEventUponDead = function() {
   let sightRadius = 0;
   const referenceData = this.event();
 
-  if (referenceData.meta && referenceData.meta[J.Base.Notetags.Sight]) {
-    sightRadius = referenceData.meta[J.Base.Notetags.Sight] || sightRadius;
+  if (referenceData.meta && referenceData.meta["commonEventDead"]) {
+    sightRadius = referenceData.meta["commonEventDead"] || sightRadius;
   } else {
     const structure = /<commonEventDead:[ ]?([0-9]*)>/i;
     const notedata = referenceData.note.split(/[\r\n]+/);

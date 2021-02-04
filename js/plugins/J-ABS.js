@@ -479,8 +479,10 @@ J.ABS.Input.DirUp = "up";
 J.ABS.Input.DirDown = "down";
 J.ABS.Input.DirLeft = "left";
 J.ABS.Input.DirRight = "right";
-J.ABS.Input.A = "ok";
-J.ABS.Input.B = "cancel";
+J.ABS.Input.A = "ok"; //Z
+J.ABS.Input.B = "cancel"; //X
+J.ABS.Input.C = "65"; //A
+J.ABS.Input.D = "83"; //S
 J.ABS.Input.X = "shift";
 J.ABS.Input.Y = "tab";
 J.ABS.Input.R1 = "pagedown";
@@ -536,8 +538,10 @@ Input.keyMapper = {
   40: J.ABS.Input.DirDown,    // arrow down
   37: J.ABS.Input.DirLeft,    // arrow left
   39: J.ABS.Input.DirRight,   // arrow right
-  67: J.ABS.Input.A,          // z 90 -> c 67
-  86: J.ABS.Input.B,          // x 88 -> v 86
+  90: J.ABS.Input.A,          // z 90 
+  88: J.ABS.Input.B,          // x 88
+  65: J.ABS.Input.C,			  // a 67
+  83: J.ABS.Input.D,			  // s 86
   16: J.ABS.Input.X,          // shift
   66: J.ABS.Input.Y,          // c 67 -> b 66
   81: J.ABS.Input.L1,         // q
@@ -2974,11 +2978,11 @@ Game_BattleMap.prototype.handleAbsInput = function() {
   }
 
   // mainhand action
-	  if (Input.isTriggered(J.ABS.Input.A) || Input.isPressed(J.ABS.Input.A)) {
+	  if (Input.isTriggered(J.ABS.Input.C) || Input.isPressed(J.ABS.Input.C)) {
 		this.performMainhandAction();
 	  }
 	  // offhand action
-	  if (Input.isTriggered(J.ABS.Input.B)  || Input.isTriggered("control")) {
+	  if (Input.isTriggered(J.ABS.Input.D)  || Input.isTriggered("control")) {
 		this.performOffhandAction();
 	  }
 
@@ -3548,7 +3552,7 @@ Game_BattleMap.prototype.triggerAlert = function(attacker, target) {
   if (!this.canBeAlerted(target)) return;
 
   // alert the target!
-  target.showBalloon(J.ABS.Balloons.Question);
+  //target.showBalloon(J.ABS.Balloons.Question);
   target.setAlertedCoordinates(attacker.getX(), attacker.getY());
   const alertDuration = target.getCharacter().alertedDuration();
   target.setAlertedCounter(alertDuration);
@@ -5257,7 +5261,7 @@ class JABS_Battler {
     }
 
     if (this._alertedCounter <= 0) {
-      this.showBalloon(J.ABS.Balloons.Silence);
+      //this.showBalloon(J.ABS.Balloons.Silence);
       this.setAlerted(false);
       this._alertedCounter = 0;
     }
@@ -6731,7 +6735,7 @@ class JABS_Battler {
     //this._target = target;
     this.isIdle(false);
     this._event.lock();
-    this.showBalloon(J.ABS.Balloons.Exclamation);
+    //this.showBalloon(J.ABS.Balloons.Exclamation);
   }
 
   /**
@@ -6742,7 +6746,7 @@ class JABS_Battler {
     this.setTarget(null);
     //this._target = null;
     this._engaged = false;
-    this.showBalloon(J.ABS.Balloons.Frustration);
+    //this.showBalloon(J.ABS.Balloons.Frustration);
   }
 
   /**
