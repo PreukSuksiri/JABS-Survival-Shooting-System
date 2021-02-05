@@ -341,8 +341,11 @@ DataManager.savefileExists = function(savefileId) {
 DataManager.saveGame = function(savefileId) {
     const contents = this.makeSaveContents();
     const saveName = this.makeSavename(savefileId);
+	
     return StorageManager.saveObject(saveName, contents).then(() => {
+		
         this._globalInfo[savefileId] = this.makeSavefileInfo();
+		
         this.saveGlobalInfo();
         return 0;
     });
@@ -543,6 +546,7 @@ StorageManager.isLocalMode = function() {
 };
 
 StorageManager.saveObject = function(saveName, object) {
+
     return this.objectToJson(object)
         .then(json => this.jsonToZip(json))
         .then(zip => this.saveZip(saveName, zip));
@@ -560,6 +564,7 @@ StorageManager.objectToJson = function(object) {
             const json = JsonEx.stringify(object);
             resolve(json);
         } catch (e) {
+			console.log(e);
             reject(e);
         }
     });

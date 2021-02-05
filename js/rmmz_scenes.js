@@ -2254,6 +2254,7 @@ Scene_Save.prototype.firstSavefileId = function() {
 Scene_Save.prototype.onSavefileOk = function() {
     Scene_File.prototype.onSavefileOk.call(this);
     const savefileId = this.savefileId();
+	
     if (this.isSavefileEnabled(savefileId)) {
         this.executeSave(savefileId);
     } else {
@@ -2262,11 +2263,12 @@ Scene_Save.prototype.onSavefileOk = function() {
 };
 
 Scene_Save.prototype.executeSave = function(savefileId) {
+	
     $gameSystem.setSavefileId(savefileId);
     $gameSystem.onBeforeSave();
     DataManager.saveGame(savefileId)
         .then(() => this.onSaveSuccess())
-        .catch(() => this.onSaveFailure());
+        .catch(() => this.onSaveFailure() );
 };
 
 Scene_Save.prototype.onSaveSuccess = function() {

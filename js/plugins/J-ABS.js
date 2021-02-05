@@ -1691,6 +1691,8 @@ Scene_Map.prototype.createJabsAbsMenuMainWindow = function() {
   this._j._absMenu._mainWindow = mainMenu;
   this._j._absMenu._mainWindow.close();
   this.addWindow(this._j._absMenu._mainWindow);
+  
+
 }
 
 /**
@@ -2993,7 +2995,8 @@ Game_BattleMap.prototype.handleAbsInput = function() {
 
   // menu
   if (Input.isTriggered(J.ABS.Input.Start) || Input.isTriggered("escape") || Input.isTriggered("cancel")) {
-    this.performMenuAction();
+    //this.performMenuAction();
+	SceneManager.push(Scene_Menu);
   }
 }
 
