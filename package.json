@@ -3,7 +3,7 @@
     "main": "index.html",
     "chromium-args": "--force-color-profile=srgb",
     "window": {
-        "title": "JABS Survival Shooting System",
+        "title": "JABS Survival Shooter",
         "width": 1280,
         "height": 720,
         "position": "center",

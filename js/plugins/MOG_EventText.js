@@ -75,25 +75,17 @@ Game_Event.prototype.setupPage = function() {
 //==============================
 Game_Event.prototype.check_event_text = function() {
 	this._need_clear_text = true
-	try
-	{
-		if (!this._erased && this.page()) {
-			this.list().forEach((l) => {
-				if (l.code === 108) {
-					const comment = l.parameters[0].split(' : ');
-					if (comment[0].toLowerCase() == "event_text") {
-						this._char_text = [true, String(comment[1])];
-						this._need_clear_text = false;
-					}
+	if (!this._erased && this.page()) {
+		this.list().forEach((l) => {
+			if (l.code === 108) {
+				const comment = l.parameters[0].split(' : ');
+				if (comment[0].toLowerCase() == "event_text") {
+					this._char_text = [true, String(comment[1])];
+					this._need_clear_text = false;
 				}
-			}, this);
-		};
-	}
-	catch(ex)
-	{
-		
-	}
-	
+			}
+		}, this);
+	};
 
 	if (this._need_clear_text) {
 		this._char_text = [true, ""]

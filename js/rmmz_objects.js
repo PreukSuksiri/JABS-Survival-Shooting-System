@@ -5983,37 +5983,29 @@ Game_Troop.prototype.setupBattleEvent = function() {
         if (this._interpreter.setupReservedCommonEvent()) {
             return;
         }
-		if (this.troop() != null && "pages" in this.troop())
-		{
-			const pages = this.troop().pages;
-			for (let i = 0; i < pages.length; i++) {
-				const page = pages[i];
-				if (this.meetsConditions(page) && !this._eventFlags[i]) {
-					this._interpreter.setup(page.list);
-					if (page.span <= 1) {
-						this._eventFlags[i] = true;
-					}
-					break;
-				}
-			}
-		}
-        
+        const pages = this.troop().pages;
+        for (let i = 0; i < pages.length; i++) {
+            const page = pages[i];
+            if (this.meetsConditions(page) && !this._eventFlags[i]) {
+                this._interpreter.setup(page.list);
+                if (page.span <= 1) {
+                    this._eventFlags[i] = true;
+                }
+                break;
+            }
+        }
     }
 };
 
 Game_Troop.prototype.increaseTurn = function() {
-	if (this.troop() != null && "pages" in this.troop())
-	{
-		const pages = this.troop().pages;
-		for (let i = 0; i < pages.length; i++) {
-			const page = pages[i];
-			if (page.span === 1) {
-				this._eventFlags[i] = false;
-			}
-		}
-		this._turnCount++;
-	}
-    
+    const pages = this.troop().pages;
+    for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        if (page.span === 1) {
+            this._eventFlags[i] = false;
+        }
+    }
+    this._turnCount++;
 };
 
 Game_Troop.prototype.expTotal = function() {
@@ -9293,17 +9285,13 @@ Game_Event.prototype.refresh = function() {
 };
 
 Game_Event.prototype.findProperPageIndex = function() {
-	if (this.event() != null && "pages" in this.event())
-	{
-		const pages = this.event().pages;
-		for (let i = pages.length - 1; i >= 0; i--) {
-			const page = pages[i];
-			if (this.meetsConditions(page)) {
-				return i;
-			}
-		}
-	}
-    
+    const pages = this.event().pages;
+    for (let i = pages.length - 1; i >= 0; i--) {
+        const page = pages[i];
+        if (this.meetsConditions(page)) {
+            return i;
+        }
+    }
     return -1;
 };
 

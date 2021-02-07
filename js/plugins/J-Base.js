@@ -1,4 +1,5 @@
- /*:
+//#region Introduction
+/*:
  * @target MZ
  * @plugindesc 
  * The base class for all J plugins.
@@ -21,14 +22,21 @@ var J = J || {};
 J.Base = {};
 
 /**
- * The actual `plugin parameters` extracted from RMMZ.
- */
-J.Base.PluginParameters = PluginManager.parameters(`J-Base`);
-
-/**
  * The `metadata` associated with this plugin, such as version.
  */
 J.Base.Metadata = {
+  /**
+   * The version of this plugin.
+   */
+  Name: `J-Base`,
+};
+
+/**
+ * The actual `plugin parameters` extracted from RMMZ.
+ */
+J.Base.PluginParameters = PluginManager.parameters(J.Base.Metadata.Name);
+J.Base.Metadata = {
+  ...J.Base.Metadata,
   /**
    * The version of this plugin.
    */
@@ -45,25 +53,36 @@ J.Base.Notetags = {
   CastAnimation: "castAnimation",
   Combo: "combo",
   Cooldown: "cooldown",
+  CounterParry: "counterParry",
+  CounterGuard: "counterGuard",
   Duration: "duration",
   FreeCombo: "freeCombo",
   IgnoreParry: "ignoreParry",
+  Guard: "guard",
+  Parry: "parry",
   Knockback: "knockback",
   KnockbackResist: "knockbackResist",
   MoveType: "moveType",
   Piercing: "pierce",
   PoseSuffix: "poseSuffix",
+  Projectile: "projectile",
   Proximity: "proximity",
   Range: "range",
+  Retaliate: "retaliate",
   Shape: "shape",
   UniqueCooldown: "unique",
 
+  // on items in database
+  UseOnPickup: "useOnPickup",
+
   // on equipment in database.
   SkillId: "skillId",
+  SpeedBoost: "speedBoost",
 
   // on enemies in database.
   EnemyLevel: "level",
   PrepareTime: "prepare",
+  Drops: "drops",
 
   // on events on map.
   BattlerId: "e",
@@ -90,7 +109,79 @@ J.Base.Notetags = {
   HpPerc: "hpPerc",
   MpPerc: "mpPerc",
   TpPerc: "tpPerc",
+};
 
+/**
+ * The various collision shapes an attack can be for JABS.
+ */
+J.Base.Shapes = {
+  /**
+   * A rhombus (aka diamond) shaped hitbox.
+   */
+  Rhombus: "rhombus",
+
+  /**
+   * A square around the target hitbox.
+   */
+  Square: "square",
+
+  /**
+   *  A square in front of the target hitbox.
+   */
+  FrontSquare: "frontsquare",
+
+  /**
+   * A line from the target hitbox.
+   */
+  Line: "line",
+
+  /**
+   * An arc shape hitbox in front of the action.
+   */
+  Arc: "arc",
+
+  /**
+   * A wall infront of the target hitbox.
+   */
+  Wall: "wall",
+
+  /**
+   * A cross from the target hitbox.
+   */
+  Cross: "cross"
+};
+
+/**
+ * The various number of projectiles available to create.
+ */
+J.Base.Projectiles = {
+  /**
+   * The default; A single projectile per normal.
+   */
+  Single: 1,
+
+  /**
+   * Two projectiles side-by-side.
+   */
+  Double: 2,
+
+  /**
+   * Three projectiles, one infront and two adjacent diagonals.
+   */
+  Triple: 3,
+
+  /**
+   * Four projectiles, one in all of dir4.
+   * Basic: (2, 4, 6, 8)
+   */
+  Quadra: 4,
+
+  /**
+   * Eight projectiles, one in all of dir8. 
+   * Basic: (2, 4, 6, 8)
+   * Diagonal: (1, 3, 7, 9)
+   */
+  Octa: 8,
 };
 
 /**
@@ -99,43 +190,77 @@ J.Base.Notetags = {
 J.Base.Aliased = {
   DataManager: {},
   Game_Character: {},
+  Window_Command: {},
 };
 
 //#region Helpers
 /**
  * The helper functions used commonly throughout my plugins.
  */
-J.Base.Helpers = {};
+J.Base.Helpers = {
+  /**
+   * Generates a `uuid`- a universally unique identifier- for this battler.
+   * @returns {string} The `uuid`.
+   */
+  generateUuid() {
+    const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+      .replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    return uuid;
+  },
 
-/**
- * Generates a `uuid`- a universally unique identifier- for this battler.
- * @returns {string} The `uuid`.
- */
-J.Base.Helpers.generateUuid = () => {
-  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-    .replace(/[xy]/g, c => {
-      const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  return uuid;
-};
+  /**
+   * Imports the required `fs` import.
+   */
+  fs() { return require('fs'); },
 
-/**
- * Imports the required `fs` import.
- */
-J.Base.Helpers.fs = () => require('fs');
+  /**
+   * Confirms the existence of a given file.
+   * @param {string} path The path of the file we're checking.
+   * @returns {boolean} True if the file exists, false otherwise.
+   */
+  checkFile(path) {
+    const fs = J.Base.Helpers.fs();
+    const result = fs.existsSync(path);
+    return result;
+  },
 
-/**
- * Confirms the existence of a given file.
- * @param {string} path The path of the file we're checking.
- * @returns {boolean} True if the file exists, false otherwise.
- */
-J.Base.Helpers.checkFile = path => {
-  const fs = J.Base.Helpers.fs();
-  const result = fs.existsSync(path);
-  return result;
+  /**
+   * Updates the value of a variable by a given amount.
+   * 
+   * NOTE: This assumes the variable contains only a number.
+   * @param {number} variableId The id of the variable to modify.
+   * @param {number} amount The amount to modify the variable by.
+   */
+  modVariable(variableId, amount) {
+    const oldValue = $gameVariables.value(variableId);
+    const newValue = oldValue + amount;
+    $gameVariables.setValue(variableId, newValue);
+  },
+
+  /**
+   * Testing import from external files.
+   */
+  testImport() {
+    const path = 'js/plugins/test/test.js';
+    const { Ninja } = require(path);
+    const test2 = new Ninja("asdf");
+    console.log(test2.test.call(test2));
+  },
+
+  /**
+   * Provides a random integer within the range
+   * @param {number} min The lower bound for random numbers (inclusive).
+   * @param {number} max The upper bound for random numbers (exclusive).
+   */
+  getRandomNumber(min, max) {
+    return Math.floor(min + Math.random() * (max + 1 - min))
+  },
 };
 //#endregion Helpers
+//#endregion Introduction
 
 //#region Static objects
 //#region DataManager
@@ -524,34 +649,6 @@ Game_Character.prototype.isInvincible = function() {
 };
 
 /**
- * When Die-hard enemies' HP reachs 0, they will still be alive.
- * `False` by default.
- * @returns {boolean}
- */
-Game_Character.prototype.isDieHard = function() {
-  if (!(this instanceof Game_Event)) return;
-
-  let invincible = false;
-  const referenceData = this.event();
-
-  if (referenceData.meta && referenceData.meta["diehard"]) {
-    invincible = true;
-  } else {
-    const structure =/<diehard>/i;
-    const notedata = referenceData.note.split(/[\r\n]+/);
-    notedata.forEach(note => {
-      if (note.match(structure)) {
-        invincible = true;
-      }
-    })
-  }
-
-  return invincible;
-};
-
-
-
-/**
  * Gets the boolean for whether or not this is an inanimate object.
  * Inanimate objects have no hp bar, don't move idly, and cannot engage.
  * This is typically used for things like traps that perform actions.
@@ -581,6 +678,32 @@ Game_Character.prototype.isInanimate = function() {
 
 
 /**
+ * When Die-hard enemies' HP reachs 0, they will still be alive.
+ * `False` by default.
+ * @returns {boolean}
+ */
+Game_Character.prototype.isDieHard = function() {
+  if (!(this instanceof Game_Event)) return;
+
+  let invincible = false;
+  const referenceData = this.event();
+
+  if (referenceData.meta && referenceData.meta["diehard"]) {
+    invincible = true;
+  } else {
+    const structure =/<diehard>/i;
+    const notedata = referenceData.note.split(/[\r\n]+/);
+    notedata.forEach(note => {
+      if (note.match(structure)) {
+        invincible = true;
+      }
+    })
+  }
+
+  return invincible;
+};
+
+/**
  * Enemy turn on switch A when dies.
  * `False` by default.
  * @returns {boolean}
@@ -589,8 +712,8 @@ Game_Character.prototype.callCommonEventUponDead = function() {
   let sightRadius = 0;
   const referenceData = this.event();
 
-  if (referenceData.meta && referenceData.meta["commonEventDead"]) {
-    sightRadius = referenceData.meta["commonEventDead"] || sightRadius;
+  if (referenceData.meta && referenceData.meta[J.Base.Notetags.Sight]) {
+    sightRadius = referenceData.meta[J.Base.Notetags.Sight] || sightRadius;
   } else {
     const structure = /<commonEventDead:[ ]?([0-9]*)>/i;
     const notedata = referenceData.note.split(/[\r\n]+/);
@@ -603,7 +726,6 @@ Game_Character.prototype.callCommonEventUponDead = function() {
 
   return parseInt(sightRadius);
 };
-
 
 //#endregion Game_Character
 
@@ -636,6 +758,42 @@ Object.defineProperty(Game_Enemy.prototype, "level", {
 });
 
 /**
+ * Gets any additional drops from the notes of this particular enemy.
+ * @returns {[string, number, number][]}
+ */
+Game_Enemy.prototype.extraDrops = function() {
+  const referenceData = this.enemy();
+  let dropList = [];
+  const structure = /<drops:[ ]?\[(i|item|w|weapon|a|armor),[ ]?(\d+),[ ]?(\d+)\]>/i;
+  const notedata = referenceData.note.split(/[\r\n]+/);
+  notedata.forEach(note => {
+    if (note.match(structure)) {
+      let kind = 0;
+      switch (RegExp.$1) {
+        case ("i" || "item"):
+          kind = 1;
+          break;
+        case ("w" || "weapon"):
+          kind = 2;
+          break;
+        case ("a" || "armor"):
+          kind = 3;
+          break;
+      };
+
+      const result = { 
+        kind, 
+        dataId: parseInt(RegExp.$2), 
+        denominator: parseInt(RegExp.$3)
+      };
+      dropList.push(result);
+    }
+  });
+
+  return dropList;
+};
+
+/**
  * Gets the enemy's basic attack skill id from their notes.
  * Defaults to `1` if no note is present.
  * @returns {number}
@@ -643,7 +801,7 @@ Object.defineProperty(Game_Enemy.prototype, "level", {
 Game_Enemy.prototype.skillId = function() {
   let skillId = 1;
 
-  const referenceData = $dataEnemies[this.enemyId()];
+  const referenceData = this.enemy();
   if (referenceData.meta && referenceData.meta[J.Base.Notetags.SkillId]) {
     // if its in the metadata, then grab it from there.
     skillId = parseInt(referenceData.meta[J.Base.Notetags.SkillId]) || skillId;
@@ -663,13 +821,13 @@ Game_Enemy.prototype.skillId = function() {
 
 /**
  * Gets the enemy's basic attack skill id from their notes.
- * Defaults to `1` if no note is present.
+ * Defaults to `180` if no note is present.
  * @returns {number}
  */
 Game_Enemy.prototype.prepareTime = function() {
   let prepare = 180;
 
-  const referenceData = $dataEnemies[this.enemyId()];
+  const referenceData = this.enemy();
   if (referenceData.meta && referenceData.meta[J.Base.Notetags.PrepareTime]) {
     // if its in the metadata, then grab it from there.
     prepare = referenceData.meta[J.Base.Notetags.PrepareTime];
@@ -685,6 +843,32 @@ Game_Enemy.prototype.prepareTime = function() {
   }
 
   return parseInt(prepare);
+};
+
+/**
+ * Gets the enemy's retaliation skill from their notes.
+ * Defaults to `180` if no note is present.
+ * @returns {number}
+ */
+Game_Enemy.prototype.retaliationSkillId = function() {
+  let retaliation = 0;
+
+  const referenceData = this.enemy();
+  if (referenceData.meta && referenceData.meta[J.Base.Notetags.Retaliate]) {
+    // if its in the metadata, then grab it from there.
+    retaliation = referenceData.meta[J.Base.Notetags.Retaliate];
+  } else {
+    // if its not in the metadata, then check the notes proper.
+    const structure = /<retaliate:[ ]?([0-9]*)>/i;
+    const notedata = referenceData.note.split(/[\r\n]+/);
+    notedata.forEach(note => {
+      if (note.match(structure)) {
+        retaliation = RegExp.$1;
+      }
+    })
+  }
+
+  return parseInt(retaliation);
 };
 //#endregion Game_Enemy
 //#endregion Game objects
@@ -941,7 +1125,45 @@ Sprite_Text.prototype.textAlignment = function() {
 //#endregion
 //#endregion Sprite objects
 
-//#region Custom classes
+//#region Window objects
+//#region Window_Command
+/**
+ * Draws the icon along with the item itself in the command window.
+ */
+J.Base.Aliased.Window_Command.drawItem = Window_Command.prototype.drawItem;
+Window_Command.prototype.drawItem = function(index) {
+  J.Base.Aliased.Window_Command.drawItem.call(this, index);
+  const commandIcon = this.commandIcon(index);
+  if (commandIcon) {
+    const rect = this.itemLineRect(index);
+    this.drawIcon(commandIcon, rect.x, rect.y + 2)
+  }
+};
+
+/**
+ * Retrieves the icon for the given command in the window if it exists.
+ * @param {number} index the index of the command.
+ * @returns {number} The icon index for the command, or 0 if it doesn't exist.
+ */
+Window_Command.prototype.commandIcon = function(index) {
+  return this._list[index].icon;
+};
+
+/**
+ * An overload for the `addCommand()` function that allows adding an icon to a command.
+ * @param {string} name The visible name of this command.
+ * @param {string} symbol The symbol for this command.
+ * @param {boolean} enabled Whether or not this command is enabled.
+ * @param {object} ext The extra data for this command.
+ * @param {number} icon The icon index for this command.
+ */
+Window_Command.prototype.addCommand = function(name, symbol, enabled = true, ext = null, icon = 0) {
+  this._list.push({ name, symbol, enabled, ext, icon });
+};
+//#endregion Window_Command
+//#endregion Window objects
+
+//#region JABS classes
 //#region JABS_SkillData
 /**
  * A class that contains all custom data for JABS skills.
@@ -977,6 +1199,86 @@ class JABS_SkillData {
     }
 
     return ignore;
+  }
+
+  /**
+   * Gets the amount of damage being reduced by guarding.
+   * @returns {[number, boolean]} [damage reduction, true if reduction is %-based, false otherwise].
+   */
+  get guard() {
+    let guard = [0, false];
+    if (this._meta && this._meta[J.Base.Notetags.Guard]) {
+      guard = JSON.parse(this._meta[J.Base.Notetags.Guard]);
+    } else {
+      const structure = /<guard:[ ]?(\[\d+,[ ]?\d+\])>/i;
+      this._notes.forEach(note => {
+        if (note.match(structure)) {
+          guard = JSON.parse(RegExp.$1);
+        }
+      });
+    }
+
+    return guard;
+  }
+
+  /**
+   * Gets the number of frames that a precise-guard is available for.
+   * @returns {number} The number of frames for precise-guard.
+   */
+  get parry() {
+    let parry = 0;
+    if (this._meta && this._meta[J.Base.Notetags.Parry]) {
+      parry = parseInt(this._meta[J.Base.Notetags.Parry]);
+    } else {
+      const structure = /<parry:[ ]?(\d+)>/i;
+      this._notes.forEach(note => {
+        if (note.match(structure)) {
+          parry = parseInt(RegExp.$1);
+        }
+      });
+    }
+
+    return parry;
+  }
+
+  /**
+   * Gets the id of the skill to retaliate with when executing a precise-parry.
+   * @returns {number} The skill id.
+   */
+  get counterParry() {
+    let id = 0;
+    if (this._meta && this._meta[J.Base.Notetags.CounterParry]) {
+      id = parseInt(this._meta[J.Base.Notetags.CounterParry]);
+    } else {
+      const structure = /<counterParry:[ ]?(\d+)>/i;
+      this._notes.forEach(note => {
+        if (note.match(structure)) {
+          id = parseInt(RegExp.$1);
+        }
+      });
+    }
+
+    return id;
+  }
+
+  /**
+   * Gets the id of the skill to retaliate with when guarding.
+   * @returns {number} The skill id.
+   */
+  get counterGuard() {
+    let id = 0;
+    if (this._meta && this._meta[J.Base.Notetags.CounterGuard]) {
+      id = parseInt(this._meta[J.Base.Notetags.CounterGuard]);
+    } else {
+      const structure = /<counterGuard:[ ]?(\d+)>/i;
+      this._notes.forEach(note => {
+        if (note.match(structure)) {
+          id = parseInt(RegExp.$1);
+        }
+      });
+    }
+
+    return id;
   }
 
   /**
@@ -1084,19 +1386,50 @@ class JABS_SkillData {
    * @returns {string} The hitbox shape (default = rhombus).
    */
   get shape() {
-    let shape = "rhombus";
+    const defaultShape = 'rhombus';
+    let shape = defaultShape;
+    const possibleShapes = ['rhombus', 'square', 'frontsquare', 'line', 'arc', 'wall', 'cross'];
     if (this._meta && this._meta[J.Base.Notetags.Shape]) {
-      shape = this._meta[J.Base.Notetags.Shape] || shape;
+      if (possibleShapes.includes(this._meta[J.Base.Notetags.Shape].toLowerCase())) {
+        shape = this._meta[J.Base.Notetags.Shape].toLowerCase();
+      } else {
+        console.warn('invalid shape provided- defaulted to "rhombus".');
+      }
     } else {
       const structure = /<shape:[ ]?(rhombus|square|frontsquare|line|arc|wall|cross)>/i;
       this._notes.forEach(note => {
         if (note.match(structure)) {
-          shape = RegExp.$1;
+          shape = RegExp.$1.toLowerCase();
         }
       });
     }
 
     return shape;
+  }
+
+  /**
+   * Gets the number of projectiles for this skill.
+   * @returns {string} The hitbox shape (default = rhombus).
+   */
+  get projectile() {
+    let projectile = 1;
+    const possible = [1, 2, 3, 4, 8];
+    if (this._meta && this._meta[J.Base.Notetags.Projectile]) {
+      if (possible.includes(parseInt(this._meta[J.Base.Notetags.Projectile]))) {
+        projectile = parseInt(this._meta[J.Base.Notetags.Projectile]);
+      } else {
+        console.warn('invalid projectile provided- defaulted to "1".');
+      }
+    } else {
+      const structure = /<projectile:[ ]?(1|2|3|4|8)>/i;
+      this._notes.forEach(note => {
+        if (note.match(structure)) {
+          projectile = parseInt(RegExp.$1);
+        }
+      });
+    }
+
+    return projectile;
   }
 
   /**
@@ -1318,8 +1651,28 @@ class JABS_EquipmentData {
     }
 
     return skillId;
-  }
-}
+  };
+
+  /**
+   * Gets the speed boost value associated with this piece of equipment.
+   * @returns {number} The speed boost value.
+   */
+  get speedBoost() {
+    let speedBoost = 0;
+    if (this._meta && this._meta[J.Base.Notetags.SpeedBoost]) {
+      speedBoost = parseInt(this._meta[J.Base.Notetags.SpeedBoost]) || 0;
+    } else {
+      const structure = /<speedBoost:[ ]?([-]?\d+)>/i;
+      this._notes.forEach(note => {
+        if (note.match(structure)) {
+          speedBoost = parseInt(RegExp.$1);
+        }
+      });
+    }
+
+    return speedBoost;
+  };
+};
 //#endregion JABS_EquipmentData
 
 //#region JABS_ItemData
@@ -1353,7 +1706,7 @@ class JABS_ItemData {
     }
 
     return skillId;
-  }
+  };
 
   /**
    * Gets the cooldown for this item.
@@ -1373,6 +1726,26 @@ class JABS_ItemData {
     }
 
     return cooldown;
+  };
+
+  /**
+   * Gets whether or not this item will be used instantly on-pickup.
+   * @returns {boolean} True if this is an instant-use item, false otherwise.
+   */
+  get useOnPickup() {
+    let useOnPickup = false;
+    if (this._meta && this._meta[J.Base.Notetags.UseOnPickup]) {
+      useOnPickup = true;
+    } else {
+      const structure = /<useOnPickup>/i;
+      this._notes.forEach(note => {
+        if (note.match(structure)) {
+          useOnPickup = true;
+        }
+      });
+    }
+
+    return useOnPickup;
   }
 
 }
@@ -1593,5 +1966,6 @@ class JABS_StateData {
 
 }
 //#endregion JABS_StateData
+//#endregion JABS Classes
 
-//#endregion Custom Classes
+//ENDFILE

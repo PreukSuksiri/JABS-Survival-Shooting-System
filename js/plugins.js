@@ -7,15 +7,16 @@ var $plugins =
 {"name":"--------------------------","status":false,"description":"---------------------------------------------------------------------","parameters":{}},
 {"name":"MK_RandomGenerate_Dungeon","status":false,"description":"1.01 Aero's Random Dungeon Generator","parameters":{"Default Use Seedable RNG":"true","Entrance Region Id":"1","Player Spawning Point Region Id":"2","Exit Region Id":"3","Decoration Stopper Id":"61","Default Border Width":"1"}},
 {"name":"--------------------------","status":false,"description":"---------------------------------------------------------------------","parameters":{}},
-{"name":"Yami_8DirEx","status":false,"description":"Player can 8-dir move, also touch input movement.","parameters":{"dir4 Switch ID":"100"}},
+{"name":"Yami_8DirEx","status":true,"description":"Player can 8-dir move, also touch input movement.","parameters":{"dir4 Switch ID":"100"}},
 {"name":"J-Base","status":true,"description":"The base class for all J plugins.","parameters":{}},
 {"name":"J-Hud","status":true,"description":"The Hud for JABS.","parameters":{"BreakHead":"----------------------------------","Extensions":"Modify Below","BreakSettings":"----------------------------------","Enabled":"true"}},
 {"name":"J-LevelScaling","status":true,"description":"Scales damage and exp/gold rewards from defeated enemies.","parameters":{"BreakHead":"----------------------------------","Extensions":"Modify Below","BreakSettings":"----------------------------------","Level Scaling":"false"}},
 {"name":"J-TextLog","status":true,"description":"A non-battle-reliant text log (designed for JABS, though).","parameters":{"BreakHead":"----------------------------------","Extensions":"Modify Below","BreakSettings":"----------------------------------","Enabled":"false"}},
-{"name":"J-ABS","status":true,"description":"Welcome to JABS,\nJ's Action Battle System!","parameters":{"BreakHead":"----------------------------------","Extensions":"Modify Below","BreakSettings":"----------------------------------","ABS System":"true","Default Enemy Prepare Time":"180","Default Action Map Id":"2","Default Attack Animation Id":"1","Default Dodge Skill Type Id":"1","Default Tool Cooldown Time":"300"}},
+{"name":"J-ControlledDrops","status":true,"description":"A","parameters":{}},
+{"name":"J-ABS","status":true,"description":"Welcome to JABS,\r\nJ's Action Battle System!","parameters":{"BreakHead":"----------------------------------","Extensions":"Modify Below","BreakSettings":"----------------------------------","ABS System":"true","Default Enemy Prepare Time":"180","Default Action Map Id":"2","Default Attack Animation Id":"1","Default Dodge Skill Type Id":"1","Default Guard Skill Type Id":"2","Default Tool Cooldown Time":"300"}},
 {"name":"J-ABS-ActionKeys","status":true,"description":"The Action Keys for JABS.","parameters":{"BreakHead":"----------------------------------","Extensions":"Modify Below","BreakSettings":"----------------------------------","Enabled":"false"}},
-{"name":"MOG_EventText","status":true,"description":"(v1.0) Adiciona um texto em cima do evento.","parameters":{"X axis":"0","Y axis":"0","Font Size":"18"}},
-{"name":"HPConsumeSkill","status":true,"description":"make the skill that consumes HP, not only MP and/or TP","parameters":{"Consume HP Color":"17"}},
-{"name":"ItemConsumeSkill","status":true,"description":"make the skill that consumes item, not only MP and/or TP","parameters":{"Consume Item Color":"17","Consume Item Text":"\"Ammo\""}},
-{"name":"IncreaseItemLimit","status":true,"description":"Increase max item limit.","parameters":{"maxitem":"9999"}}
+{"name":"MOG_EventText","status":false,"description":"(v1.0) Adiciona um texto em cima do evento.","parameters":{"X axis":"0","Y axis":"0","Font Size":"18"}},
+{"name":"J-CMS-MainMenu","status":true,"description":"A menu rewrite.","parameters":{}},
+{"name":"IncreaseItemLimit","status":true,"description":"Increase max item limit.","parameters":{"maxitem":"99999"}},
+{"name":"ItemConsumeSkill","status":true,"description":"make the skill that consumes item, not only MP and/or TP","parameters":{"Consume Item Color":"17","Consume Item Text":"\"Ammo\""}}
 ];

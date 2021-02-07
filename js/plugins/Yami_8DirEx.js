@@ -66,17 +66,84 @@
     };
 
     /**
+     * Extends the "Move Straight" functionality to include moving diagonally if the direction
+     * is diagonal. This has been largely overwritten to accommodate events that can fire in
+     * multiple directions within the context of JABS.
+     */
+    var _Game_Character_moveStraight = Game_Character.prototype.moveStraight;
+    Game_Event.prototype.moveStraight = function(direction) {
+      const hasInitialDirection = this._j._initialDirection;
+      const initialDirectionIsDiagonal = this.isMoveDiagonally(this._j._initialDirection);
+      if (hasInitialDirection && initialDirectionIsDiagonal) {
+        const horzVert = this.getDiagonallyMovement(this._j._initialDirection);
+        const canMoveDiagonally = this.canPass(this._x, this._y, horzVert[0]) && this.canPass(this._x, this._y, horzVert[1]);
+        if (canMoveDiagonally) {
+          const facing = this.determineDirection();
+          this.setDirection(facing);
+          this.moveDiagonally.apply(this, horzVert);
+          return;  
+        } else {
+          const canMoveHorizontally = this.canPass(this._x, this._y, horzVert[0]);
+          const canMoveVertically = this.canPass(this._x, this._y, horzVert[1]);
+          if (canMoveHorizontally) {
+            _Game_Character_moveStraight.call(this, horzVert[0]);
+            return;
+          }
+
+          if (canMoveVertically) {
+            _Game_Character_moveStraight.call(this, horzVert[1]);
+            return;
+          }
+        }
+      }
+
+      if (this.isMoveStraight(direction)) {
+        _Game_Character_moveStraight.call(this, direction);
+      } else if (this.isMoveDiagonally(direction)) {
+        const diag = this.getDiagonallyMovement(this._j._initialDirection);
+        this.moveDiagonally.apply(this, diag);
+      }
+    };
+
+    Game_Event.prototype.determineDirection = function() {
+      const player = this.getMapActionData().getCaster();
+      const playerDirection = player.getCharacter().direction();
+      const projectiles = this.getMapActionData().getBaseSkill()._jabs.projectile;
+      const playerX = player.getX();
+      const playerY = player.getY();
+      const actionX = this.x;
+      const actionY = this.y;
+      let dir = playerDirection;
+      switch (projectiles) {
+        case 1: 
+        case 2:
+        case 3:
+          dir = playerDirection;
+          break;
+        case 4:
+        case 8:
+          if (actionX < playerX) dir = 4;
+          if (actionX > playerX) dir = 6;
+          if (actionY < playerY) dir = 8;
+          if (actionY > playerY) dir = 2;
+          break;
+      }
+
+      return dir;
+    };
+
+    /**
      * OVERWRITE Moves the player in the direction provided.
      * Extended to allow for diagonal movement as well.
      * @param {number} direction The numeric direction to move.
      */
     Game_Player.prototype.processMoveByInput = function(direction) {
-        if (this.isMoveStraight(direction)) {
-            this.moveStraight(direction);
-        } else if (this.isMoveDiagonally(direction)) {
-            var diagonal = this.getDiagonallyMovement(direction);
-            this.moveDiagonally.apply(this, diagonal);
-        }
+      if (this.isMoveStraight(direction)) {
+        this.moveStraight(direction);
+      } else if (this.isMoveDiagonally(direction)) {
+        var diagonal = this.getDiagonallyMovement(direction);
+        this.moveDiagonally.apply(this, diagonal);
+      }
     };
 
     /**
@@ -111,7 +178,7 @@
     Game_Player.prototype.moveByInput = function() {
       if (!this.isMoving() && this.canMove()) {
         var dir4mode = (!!dir4varID && $gameSwitches.value(dir4varID));
-        var direction = dir4mode ? Input.dir4 :Input.dir8;
+        var direction = dir4mode ? Input.dir4 : Input.dir8;
         if (direction > 0) {
           $gameTemp.clearDestination();
         } else if ($gameTemp.isDestinationValid()){

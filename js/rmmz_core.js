@@ -6338,7 +6338,7 @@ function JsonEx() {
  * @type number
  * @default 100
  */
-JsonEx.maxDepth = 500;
+JsonEx.maxDepth = 100;
 
 /**
  * Converts an object to a JSON string with object information.

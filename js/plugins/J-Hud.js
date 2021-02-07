@@ -89,7 +89,7 @@ Scene_Map.prototype.initialize = function() {
   J.Hud.Aliased.Scene_Map.initialize.call(this);
   this._j = this._j || {};
   this._j._hud = null;
-}
+};
 
 /**
  * Create the Hud with all the rest of the windows.
@@ -98,7 +98,7 @@ J.Hud.Aliased.Scene_Map.createAllWindows = Scene_Map.prototype.createAllWindows;
 Scene_Map.prototype.createAllWindows = function() {
   this.createJabsHud();
   J.Hud.Aliased.Scene_Map.createAllWindows.call(this);
-}
+};
 
 /**
  * Creates the default HUD for JABS.
@@ -111,7 +111,7 @@ Scene_Map.prototype.createJabsHud = function() {
   const rect = new Rectangle(wx, wy, ww, wh);
   this._j._hud = new Window_Hud(rect);
   this.addWindow(this._j._hud);
-}
+};
 
 /**
  * If the HUD is in use, move the map name over a bit.
