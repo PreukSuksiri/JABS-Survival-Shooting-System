@@ -4,7 +4,8 @@
  * @plugindesc 
  * Welcome to JABS,
  * J's Action Battle System!
- * @author JE
+ * UPDATE 2 Feb 2021 : Implemented Survival Shooter
+ * @author JE, Preuk Suksiri
  * @url https://dev.azure.com/je-can-code/RPG%20Maker/_git/rmmz
  * @help
  * I'd recommend just peeking at the url attached to this plugin for details.
@@ -834,7 +835,15 @@ Game_Actor.prototype.checkSpeedBoosts = function() {
  * Gets the current speed boosts for this actor.
  */
 Game_Actor.prototype.getSpeedBoosts = function() {
-  return this._j._speedBoosts;
+	if (this._j._speedBoosts != null && this._j._speedBoosts > 0)
+	{
+		return this._j._speedBoosts;
+	}
+	else
+	{
+		return 1;
+	}
+  
 };
 
 //#endregion
@@ -8979,5 +8988,21 @@ class JABS_LootDrop {
 };
 //#endregion JABS_LootDrop
 //#endregion JABS objects
+
+
+Game_Event.prototype.findProperPageIndex = function() {
+	if (this.event() == null)
+	{
+		return -1;
+	}
+    const pages = this.event().pages;
+    for (let i = pages.length - 1; i >= 0; i--) {
+        const page = pages[i];
+        if (this.meetsConditions(page)) {
+            return i;
+        }
+    }
+    return -1;
+};
 
 //ENDFILE
