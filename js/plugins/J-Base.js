@@ -704,8 +704,9 @@ Game_Character.prototype.isDieHard = function() {
   return invincible;
 };
 
+
 /**
- * Enemy turn on switch A when dies.
+ * Enemy call common event when dies.
  * `False` by default.
  * @returns {boolean}
  */
@@ -726,6 +727,54 @@ Game_Character.prototype.callCommonEventUponDead = function() {
   }
 
   return parseInt(sightRadius);
+};
+
+/**
+ * Enemy turn on self switch when dies.
+ * `False` by default.
+ * @returns {boolean}
+ */
+Game_Character.prototype.selfSwitchUponDead = function() {
+  let result = "";
+  const referenceData = this.event();
+
+  if (referenceData.meta && referenceData.meta["selfSwitchDead"]) {
+    result = referenceData.meta["selfSwitchDead"] || result;
+  } else {
+    const structure = /<selfSwitchDead:[ ]?([0-9]*)>/i;
+    const notedata = referenceData.note.split(/[\r\n]+/);
+    notedata.forEach(note => {
+      if (note.match(structure)) {
+        result = RegExp.$1;
+      }
+    })
+  }
+
+  return result;
+};
+
+/**
+ * Enemy turn on switch when dies.
+ * `False` by default.
+ * @returns {boolean}
+ */
+Game_Character.prototype.switchUponDead = function() {
+  let result = 0;
+  const referenceData = this.event();
+
+  if (referenceData.meta && referenceData.meta["switchDead"]) {
+    result = referenceData.meta["switchDead"] || result;
+  } else {
+    const structure = /<switchDead:[ ]?([0-9]*)>/i;
+    const notedata = referenceData.note.split(/[\r\n]+/);
+    notedata.forEach(note => {
+      if (note.match(structure)) {
+        result = RegExp.$1;
+      }
+    })
+  }
+
+  return parseInt(result);
 };
 
 //#endregion Game_Character

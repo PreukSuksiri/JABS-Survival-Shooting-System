@@ -9,7 +9,16 @@
  * @url https://dev.azure.com/je-can-code/RPG%20Maker/_git/rmmz
  * @help
  * I'd recommend just peeking at the url attached to this plugin for details.
- * 
+ * Below is how to store enemy's HP into a variable
+ * if ($gameMap._j._allBattlers.filter(battler => battler._event._eventId == YOUREVENTID).length > 0)
+*	{
+*	$gameVariables.setValue(YOURVARIABLEID,$gameMap._j._allBattlers.filter(battler => battler._event._eventId == YOUREVENTID)[0]._battler.hp);
+*	}
+*	else
+*	{
+*	$gameVariables.setValue(YOURVARIABLEID,0);
+	*}
+
  * @param BreakHead
  * @text --------------------------
  * @default ----------------------------------
@@ -1666,7 +1675,7 @@ Game_Map.prototype.update = function(sceneActive) {
 Game_Map.prototype.getBattlers = function() {
   if (this._j._allBattlers == null) return [];
 
-  const livingBattlers = this._j._allBattlers.filter(battler => !battler.isDead);
+  const livingBattlers = this._j._allBattlers.filter(battler => !battler.isDead && battler._event._pageIndex == 0 && !battler.getInvincible());
   return livingBattlers;
 };
 
@@ -2098,14 +2107,39 @@ Scene_Map.prototype.update = function() {
  * Manages visibility for all extraneous windows that are used by JABS.
  */
 Scene_Map.prototype.handleJabsWindowsVisibility = function() {
+	
   if ($gameBattleMap.absEnabled && !$gameMessage.isBusy()) {
-    this.toggleHud(true);
-    this.toggleLog(true);
-    this.toggleKeys(true);
+	  if (J.Hud != null)
+	  {
+		  this.toggleHud(true);
+	  }
+    
+	if (J.TextLog != null)
+	  {
+		   this.toggleLog(true);
+	  }
+   
+	if (J.ActionKeys != null)
+	{
+		 this.toggleKeys(true);
+	}
+   
   } else {
-    this.toggleHud(false);
-    this.toggleLog(false);
-    this.toggleKeys(false);
+	  if (J.Hud != null)
+	  {
+		   this.toggleHud(false);
+	  }
+	  if (J.TextLog != null)
+	  {
+		   this.toggleLog(false);
+	  }
+	  if (J.ActionKeys != null)
+		{
+			this.toggleKeys(false);
+		}
+   
+   
+    
   }
 };
 
@@ -2114,6 +2148,10 @@ Scene_Map.prototype.handleJabsWindowsVisibility = function() {
  * @param {boolean} toggle Whether or not to display the default hud.
  */
 Scene_Map.prototype.toggleHud = function(toggle = true) {
+	if (J.Hud == null)
+	{
+		return;
+	}
   if (J.Hud.Metadata.Enabled) {
     this._j._hud.toggle(toggle);
   }
@@ -2124,6 +2162,10 @@ Scene_Map.prototype.toggleHud = function(toggle = true) {
  * @param {boolean} toggle Whether or not to display the external text log.
  */
 Scene_Map.prototype.toggleLog = function(toggle = true) {
+	if (J.TextLog == null)
+	{
+		return;
+	}
   if (J.TextLog.Metadata.Enabled) {
 	  this._j._mapTextLog.toggle(false);
    // this._j._mapTextLog.toggle(toggle);
@@ -2135,6 +2177,10 @@ Scene_Map.prototype.toggleLog = function(toggle = true) {
  * @param {boolean} toggle Whether or not to display the external action keys.
  */
 Scene_Map.prototype.toggleKeys = function(toggle = true) {
+	if (J.ActionKeys == null)
+	{
+		return;
+	}
   if (J.ActionKeys.Metadata.Enabled) {
 	  this._j._actionKeys.toggle(false);
    // this._j._actionKeys.toggle(toggle);
@@ -2449,7 +2495,7 @@ Scene_Map.prototype.commandAssign = function() {
       break;
   }
   actor.setEquippedSkill(equippedActionSlot, nextActionSkill);
-  if (J.ActionKeys.Metadata.Enabled) {
+  if (J.ActionKeys  != null && J.ActionKeys.Metadata.Enabled) {
     this._j._actionKeys.refresh();
   }
 
@@ -4045,7 +4091,7 @@ class Game_BattleMap {
     const battlers = $gameMap.getBattlers();
     battlers.forEach(battler => {
       battler.update();
-      if (battler.getBattler().isDead()) {
+      if (battler.getBattler().isDead() && !battler.getInvincible()) {
         this.handleDefeatedTarget(battler, this.getPlayerMapBattler());
       }
     });
@@ -4085,7 +4131,7 @@ class Game_BattleMap {
       if (targets.length > 0) {
         targets.forEach(target => {
           this.applyPrimaryBattleEffects(action, target);
-          if (target.getBattler().isDead()) {
+          if (target.getBattler().isDead() && !target.getInvincible()) {
             this.handleDefeatedTarget(target, action.getCaster());
             target.setInvincible();
           }
@@ -4781,6 +4827,10 @@ class Game_BattleMap {
    */
   createAttackLog(action, skill, result, caster, target) {
     // if not enabled, skip this.
+	if (J.TextLog == null)
+	{
+		return;
+	}
     if (!J.TextLog.Metadata.Enabled) return;
 
     const skillName = skill.name;
@@ -5174,6 +5224,22 @@ class Game_BattleMap {
         SoundManager.playEnemyCollapse();
       }
 
+
+	var deathSelfSwitch = targetCharacter.selfSwitchUponDead(); 
+	if (deathSelfSwitch != null && deathSelfSwitch != "") 
+	{
+      $gameSelfSwitches.setValue([$gameMap.mapId(), targetCharacter._eventId, deathSelfSwitch], true);
+
+		
+    }
+	
+	var deathSwitch = targetCharacter.switchUponDead(); 
+	if (deathSwitch > 0) 
+	{
+		$gameSwitches.setValue(deathSwitch,true);
+    }
+	
+
       //J.Base.Helpers.modVariable(2, 1);
       this.processDeathControls(targetCharacter);
       this.gainBasicRewards(targetBattler, caster);
@@ -5184,7 +5250,10 @@ class Game_BattleMap {
 	if (commonev > 0) 
 	{
 		$gameTemp.reserveCommonEvent(commonev);
+		
     }
+	
+	
 	
 	var diehard = targetCharacter.isDieHard();
 	
@@ -5235,7 +5304,6 @@ class Game_BattleMap {
       const selfSwitchId = selfSwitchData[0].toUpperCase();
       const eventId = selfSwitchData[1];
       const key = [mapId, eventId, selfSwitchId];
-      console.log(key);
       $gameSelfSwitches.setValue(key, true);
     });
   };
@@ -5349,6 +5417,10 @@ class Game_BattleMap {
    * @param {JABS_Battler} caster The ally gaining the experience and gold.
    */
   createRewardsLog(experience, gold, caster) {
+	  if (J.TextLog == null)
+	{
+		return;
+	}
     if (!J.TextLog.Metadata.Enabled || !J.TextLog.Metadata.Active)
       return;
 
@@ -5387,6 +5459,10 @@ class Game_BattleMap {
    * @param {object} item The reference data for the item loot that was picked up.
    */
   createLootLog(item) {
+	  if (J.TextLog == null)
+	{
+		return;
+	}
     if (!J.TextLog.Metadata.Enabled || !J.TextLog.Metadata.Active) return;
 
     // the player is always going to be the one collecting the loot- for now.
@@ -5452,6 +5528,10 @@ class Game_BattleMap {
    * @param {JABS_Battler} player The player.
    */
   createLevelUpLog(player) {
+	  if (J.TextLog == null)
+	{
+		return;
+	}
     if (!J.TextLog.Metadata.Enabled || !J.TextLog.Metadata.Active)
       return;
 
@@ -5530,7 +5610,11 @@ class JABS_AiManager {
         // act accordingly to being on the same team.
       } else {
         // act as though against, default.
-        this.executeAi(battler);
+		if (battler._event._pageIndex == 0 && !battler.getInvincible())
+		{
+			this.executeAi(battler);
+		}
+        
       }
     });  
   };
@@ -7595,6 +7679,10 @@ class JABS_Battler {
    * Creates the text log entry for executing an tool effect.
    */
   createToolLog = item => {
+	  if (J.TextLog == null)
+	{
+		return;
+	}
     // if not enabled, skip this.
     if (!J.TextLog.Metadata.Active) return;
 
