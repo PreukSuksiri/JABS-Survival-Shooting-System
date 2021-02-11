@@ -6,19 +6,9 @@
  * J's Action Battle System!
  * UPDATE 2 Feb 2021 : Implemented Survival Shooter
  * @author JE, Preuk Suksiri
- * @url https://dev.azure.com/je-can-code/RPG%20Maker/_git/rmmz
+ * @url https://github.com/PreukSuksiri/JABS-Survival-Shooting-System
  * @help
- * I'd recommend just peeking at the url attached to this plugin for details.
- * Below is how to store enemy's HP into a variable
- * if ($gameMap._j._allBattlers.filter(battler => battler._event._eventId == YOUREVENTID).length > 0)
-*	{
-*	$gameVariables.setValue(YOURVARIABLEID,$gameMap._j._allBattlers.filter(battler => battler._event._eventId == YOUREVENTID)[0]._battler.hp);
-*	}
-*	else
-*	{
-*	$gameVariables.setValue(YOURVARIABLEID,0);
-	*}
-
+ * URL of the original JABS plugin : https://dev.azure.com/je-can-code/RPG%20Maker/_git/rmmz
  * @param BreakHead
  * @text --------------------------
  * @default ----------------------------------
@@ -65,6 +55,11 @@
  * @desc The default number of frames for an item's cooldown if one isn't specified.
  * @default 300
  * 
+ * @param Bullet Block Terrain Tag
+ * @type number
+ * @desc The terrain tag that block a bullet
+ * @default 1
+ *
  * @command Enable JABS
  * @text Enable JABS
  * @desc Enables the JABS engine allowing battles on the map to take place.
@@ -111,6 +106,27 @@
  * @command Unlock All JABS Skill Slots
  * @text Unlock all JABS skill slots
  * @desc Unlocks all JABS skill slots for the leader.
+  * 
+ * @command Read Monster HP
+ * @text Read Monster HP 
+ * @desc Read Monster HP according to a variable containing event ID and keep the output in another variable
+ * @arg VariableContainsEventID
+ * @type number
+ * @default 1
+ * @arg OutputVariable
+ * @type number
+ * @default 1
+   * 
+ * @command Count Monster
+ * @text Count Monster
+ * @desc Count all monsters on the current map. Can include/exclude monster with specified tags.
+ * @arg TagIncluded
+ * @type text[]
+ * @arg TagExcluded
+ * @type text[]
+  * @arg OutputVariable
+ * @type number
+ * @default 1
  */
 //#endregion Introduction
 
@@ -153,6 +169,8 @@ J.ABS.Metadata.DefaultAttackAnimationId = Number(J.ABS.PluginParameters['Default
 J.ABS.Metadata.DefaultDodgeSkillTypeId = Number(J.ABS.PluginParameters['Default Dodge Skill Type Id']);
 J.ABS.Metadata.DefaultGuardSkillTypeId = Number(J.ABS.PluginParameters['Default Guard Skill Type Id']);
 J.ABS.Metadata.DefaultToolCooldownTime = Number(J.ABS.PluginParameters['Default Tool Cooldown Time']);
+J.ABS.Metadata.BulletBlockTerrainTag = Number(J.ABS.PluginParameters['Bullet Block Terrain Tag']);
+
 
 /**
  * The various default values across the engine. Often configurable.
@@ -433,6 +451,68 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Unlock All JABS Skill Slots"
 
   leader.unlockAllSlots();
 });
+
+/**
+ * Plugin command for Read Monster HP.
+ */
+PluginManager.registerCommand(J.ABS.Metadata.Name, "Read Monster HP", args => {
+	const { VariableContainsEventID, OutputVariable } = args;
+	
+	if ($gameMap._j._allBattlers.filter(battler => battler._event._eventId == $gameVariables.value(VariableContainsEventID)).length > 0)
+	{
+		$gameVariables.setValue(OutputVariable,$gameMap._j._allBattlers.filter(battler => battler._event._eventId == $gameVariables.value(VariableContainsEventID))[0]._battler.hp);
+	}
+	else
+	{
+		$gameVariables.setValue(OutputVariable,0);
+	}
+	
+});
+
+/**
+ * Plugin command for Count Monster.
+ */
+PluginManager.registerCommand(J.ABS.Metadata.Name, "Count Monster", args => {
+	const { TagIncluded, TagExcluded,OutputVariable } = args;
+	var cnt = 0;
+	for (var b in $gameMap._j._allBattlers)
+	{
+		var allow = true;
+		if (TagIncluded != null && TagIncluded != "")
+		{
+			var arrayTagIncluded = eval(TagIncluded);
+			for (var t in arrayTagIncluded)
+			{
+				if (arrayTagIncluded[t] != null && arrayTagIncluded[t] != "" && $gameMap.event($gameMap._j._allBattlers[b]._event._eventId).event().note.indexOf(arrayTagIncluded[t]) < 0)
+				{
+					allow = false;
+				}
+			}
+		}
+		
+		if (TagExcluded != null && TagExcluded != "")
+		{
+			var arrayTagExcluded = eval(TagExcluded);
+			for (var t in arrayTagExcluded)
+			{
+				if (arrayTagExcluded[t] != null && arrayTagExcluded[t] != "" && $gameMap.event($gameMap._j._allBattlers[b]._event._eventId).event().note.indexOf(arrayTagExcluded[t]) >= 0)
+				{
+					allow = false;
+				}
+			}
+		}
+		
+		if (allow)
+		{
+			cnt++;
+		}
+		
+	}
+	
+	$gameVariables.setValue(OutputVariable,cnt);
+	
+});
+
 //#endregion Plugin Command Registration
 //#endregion Plugin metadata management
 
@@ -1664,8 +1744,15 @@ Game_Map.prototype.setup = function(mapId) {
  */
 J.ABS.Aliased.Game_Map.update = Game_Map.prototype.update;
 Game_Map.prototype.update = function(sceneActive) {
-  J.ABS.Aliased.Game_Map.update.call(this, sceneActive);
-  $gameBattleMap.update();
+	try
+	{
+		J.ABS.Aliased.Game_Map.update.call(this, sceneActive);
+		$gameBattleMap.update();
+	}
+	catch(ex){
+		console.log('error at Game_Map.prototype.update');
+	}
+  
 };
 
 /**
@@ -4111,6 +4198,8 @@ class Game_BattleMap {
         this.cleanupAction(action);
         return;
       }
+	  
+	  
 
       // if there are no more hits left on this action, remove it.
       const hits = action.getPiercingTimes();
@@ -5696,8 +5785,20 @@ class JABS_AiManager {
    */
   static goHome(battler) {
     const event = battler.getCharacter();
+	
+	/*
     const nextDir = event.findDirectionTo(battler.getHomeX(), battler.getHomeY());
     event.moveStraight(nextDir);
+	*/
+	var parameterstring = "";
+		  parameterstring += "const nextDir = this.findDirectionTo("+battler.getHomeX()+", "+battler.getHomeY()+");";
+			parameterstring += "this.moveStraight(nextDir)";
+
+	  var objRoute = {list:[{code:45,indent:null,parameters:[parameterstring]},{code:0}],repeat:false,skippable:true,wait:true};
+		event.forceMoveRoute(objRoute);
+			
+			
+			
     if (battler.isHome()) {
       battler.setIdle(true);
     }
@@ -5714,12 +5815,23 @@ class JABS_AiManager {
         const distanceToHome = battler.distanceToHome();
         const event = battler.getCharacter();
         if (JABS_Battler.isClose(distanceToHome)) {
-          event.moveRandom();
+          //event.moveRandom();
+		  var objRoute = {list:[{code:9,indent:null},{code:0}],repeat:false,skippable:true,wait:true};
+			event.forceMoveRoute(objRoute);
         } else {
+			/*
           const nextDir = event.findDiagonalDirectionTo(
             battler.getX(), battler.getY(),
             battler.getHomeX(), battler.getHomeY());
-          event.moveStraight(nextDir);
+          event.moveStraight(nextDir);*/
+		  
+		  var parameterstring = "";
+		  parameterstring += "const nextDir = this.findDiagonalDirectionTo("+battler.getX()+", "+battler.getY()+","+battler.getHomeX()+", "+battler.getHomeY()+")";
+			parameterstring += "this.moveStraight(nextDir)";
+
+		  var objRoute = {list:[{code:45,indent:null,parameters:[parameterstring]},{code:0}],repeat:false,skippable:true,wait:true};
+			event.forceMoveRoute(objRoute);
+		  
         }
       } else {
         // do nothing;
@@ -8286,7 +8398,7 @@ class JABS_Battler {
     this.setTarget(null);
     //this._target = null;
     this._engaged = false;
-    this.showBalloon(J.ABS.Balloons.Frustration);
+    //this.showBalloon(J.ABS.Balloons.Frustration);
   };
 
   /**
