@@ -60,6 +60,46 @@
  * @desc The terrain tag that block a bullet
  * @default 1
  *
+ * @param Show MP Gauge in HUD
+ * @type boolean
+ * @desc Show MP Gauge in HUD
+ * @default true
+  *
+ * @param Show TP Gauge in HUD
+ * @type boolean
+ * @desc Show TP Gauge in HUD
+ * @default true
+   *
+   * @param Show EXP Gauge in HUD
+ * @type boolean
+ * @desc Show EXP Gauge in HUD
+ * @default true
+   *
+ * @param Show weapons and bullets in HUD
+ * @type boolean
+ * @desc Show weapons and bullets in HUD (Must include ItemComsumeSkill.js to show bullet)
+ * @default true
+ *
+ * @param Show pop up skill icon
+ * @type boolean
+ * @desc Show pop-up skill icon when using the skill
+ * @default false
+  *
+  * @param Show pop up reward
+ * @type boolean
+ * @desc Show pop-up reward such as EXP, money, item after defeating an enemy
+ * @default false
+  *
+ * @param Show monster emotion balloon
+ * @type boolean
+ * @desc Show monster emotion balloon such as alert, disturbed, silent
+ * @default false
+  *
+  * @param Show monster health gauge
+ * @type boolean
+ * @desc Show monster health gauge above their head
+ * @default true
+ *
  * @command Enable JABS
  * @text Enable JABS
  * @desc Enables the JABS engine allowing battles on the map to take place.
@@ -170,6 +210,14 @@ J.ABS.Metadata.DefaultDodgeSkillTypeId = Number(J.ABS.PluginParameters['Default 
 J.ABS.Metadata.DefaultGuardSkillTypeId = Number(J.ABS.PluginParameters['Default Guard Skill Type Id']);
 J.ABS.Metadata.DefaultToolCooldownTime = Number(J.ABS.PluginParameters['Default Tool Cooldown Time']);
 J.ABS.Metadata.BulletBlockTerrainTag = Number(J.ABS.PluginParameters['Bullet Block Terrain Tag']);
+J.ABS.Metadata.ShowMPGaugeInHUD = eval(J.ABS.PluginParameters['Show MP Gauge in HUD']);
+J.ABS.Metadata.ShowTPGaugeInHUD = eval(J.ABS.PluginParameters['Show TP Gauge in HUD']);
+J.ABS.Metadata.ShowEXPGaugeInHUD = eval(J.ABS.PluginParameters['Show EXP Gauge in HUD']);
+J.ABS.Metadata.ShowWeaponsAndBulletsInHUD = eval(J.ABS.PluginParameters['Show weapons and bullets in HUD']);
+J.ABS.Metadata.ShowPopUpSkillIcon = eval(J.ABS.PluginParameters['Show pop up skill icon']);
+J.ABS.Metadata.ShowPopUpReward = eval(J.ABS.PluginParameters['Show pop up reward']);
+J.ABS.Metadata.ShowMonsterEmotionBalloon = eval(J.ABS.PluginParameters['Show monster emotion balloon']);
+J.ABS.Metadata.ShowMonsterHealthGauge = eval(J.ABS.PluginParameters['Show monster health gauge']);
 
 
 /**
@@ -3068,9 +3116,7 @@ Sprite_Character.prototype.configurePopup = function(popup) {
   sprite.x = this.x;
   sprite.y = this.y;
 
-  if (popup.getIcon() > 0) {
-    //sprite.addIcon(popup.getIcon());
-  }
+  
   switch (popup.getType()) {
     case "damage":
       sprite._xVariance = getRandomNumber(-30, 30);
@@ -3078,6 +3124,9 @@ Sprite_Character.prototype.configurePopup = function(popup) {
       this.buildDamagePopSprite(sprite, popup);
       break;
     case "exp":
+		if (popup.getIcon() > 0 && J.ABS.Metadata.ShowPopUpReward) {
+			sprite.addIcon(popup.getIcon());
+		 }
       sprite._xVariance = -40;
       sprite._yVariance = 20;
 	  if (popup.getDirectValue() != "0" && popup.getDirectValue() == 0)
@@ -3086,6 +3135,9 @@ Sprite_Character.prototype.configurePopup = function(popup) {
 	  }
       break;
     case "gold":
+		if (popup.getIcon() > 0 && J.ABS.Metadata.ShowPopUpReward) {
+			sprite.addIcon(popup.getIcon());
+		 }
       sprite._xVariance = -40;
       sprite._yVariance = 40;
 	  if (popup.getDirectValue() != "0" && popup.getDirectValue() == 0)
@@ -3094,6 +3146,9 @@ Sprite_Character.prototype.configurePopup = function(popup) {
 	  }
       break;
     case "item":
+		if (popup.getIcon() > 0 && J.ABS.Metadata.ShowPopUpReward) {
+			sprite.addIcon(popup.getIcon());
+		 }
       sprite._xVariance = 60;
       sprite._yVariance = getRandomNumber(-30, 30);
       this.buildItemPopSprite(sprite, popup);
@@ -3923,14 +3978,16 @@ class Game_BattleMap {
     if ($gameMap.isEventRunning()) return;
 
     // strafing can be done concurrently to other actions.
-    if (Input.isPressed(J.ABS.Input.L2)) {
+    //if (Input.isPressed(J.ABS.Input.L2)) {
+		if (Input.isPressed(J.ABS.Input.C)||Input.isPressed(J.ABS.Input.D)) {
       this.performStrafe(true);
     } else {
       this.performStrafe(false);
     }
 
     // rotating can be done concurrently to other actions.
-    if (Input.isPressed(J.ABS.Input.X)) {
+    //if (Input.isPressed(J.ABS.Input.X)) {
+		if (Input.isPressed(J.ABS.Input.X)) {
       this.performRotate(true);
     } else {
       this.performRotate(false);
@@ -4820,7 +4877,11 @@ class Game_BattleMap {
       return;
 
     // alert the target!
-   // target.showBalloon(J.ABS.Balloons.Question);
+	if (J.ABS.Metadata.ShowMonsterEmotionBalloon )
+	{
+		target.showBalloon(J.ABS.Balloons.Question);
+	}
+   
     target.setAlertedCoordinates(attacker.getX(), attacker.getY());
     const alertDuration = target.getCharacter().alertedDuration();
     target.setAlertedCounter(alertDuration);
@@ -6736,7 +6797,11 @@ class JABS_Battler {
     }
 
     if (this._alertedCounter <= 0) {
-      //this.showBalloon(J.ABS.Balloons.Silence);
+		if (J.ABS.Metadata.ShowMonsterEmotionBalloon )
+		{
+			this.showBalloon(J.ABS.Balloons.Silence);
+		}
+      
       this.setAlerted(false);
       this._alertedCounter = 0;
     }
@@ -8387,7 +8452,11 @@ class JABS_Battler {
     //this._target = target;
     this.isIdle(false);
     this._event.lock();
-    //this.showBalloon(J.ABS.Balloons.Exclamation);
+	if (J.ABS.Metadata.ShowMonsterEmotionBalloon )
+	{
+		this.showBalloon(J.ABS.Balloons.Exclamation);
+	}
+   
   };
 
   /**
@@ -8398,7 +8467,11 @@ class JABS_Battler {
     this.setTarget(null);
     //this._target = null;
     this._engaged = false;
-    //this.showBalloon(J.ABS.Balloons.Frustration);
+	if (J.ABS.Metadata.ShowMonsterEmotionBalloon )
+	{
+		this.showBalloon(J.ABS.Balloons.Frustration);
+	}
+  
   };
 
   /**

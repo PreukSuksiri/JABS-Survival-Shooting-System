@@ -618,6 +618,11 @@ Game_Character.prototype.showHpBar = function() {
   }
 
   if (this.isInanimate()) showHpBar = false;
+  
+  if (!J.ABS.Metadata.ShowMonsterHealthGauge)
+  {
+	  showHpBar = false;
+  }
   return showHpBar;
 };
 
