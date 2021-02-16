@@ -1,9 +1,10 @@
 //=============================================================================
-// ItemConsumeSkill.js (ver.1.0.1)
+// ItemConsumeSkill.js (ver.1.0.2)
 //=============================================================================
 // [Update History]
 // 2021.Jan.25 Ver1.0.0 First Release by Mysticphoenix
 //2021.Feb.13 Ver1.0.1 Add ability to consume weapon and armor by Mysticphoenix
+//2021.Feb.16 Ver1.0.2 Fix bug where skill can be used even the MP is 0 by Mysticphoenix
 /*:
  * @target MV MZ
  * @plugindesc make the skill that requires item/armor/weapon (as an ammunition)
@@ -241,10 +242,10 @@
 			}
 		}
 
+	  return result;
 	  
 	  _Game_BattlerBase_canPaySkillCost.call(this,skill);
 	  
-	  return result;
   }
   
   
