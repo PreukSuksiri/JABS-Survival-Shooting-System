@@ -195,7 +195,8 @@
 			}
 			else
 			{
-				result = false;
+	
+				 return false;
 			}
 		}
 		
@@ -218,7 +219,7 @@
 			}
 			else
 			{
-				result = false;
+				 return false;
 			}
 		}
 		
@@ -238,13 +239,14 @@
 			}
 			else
 			{
-				result = false;
+
+				 return false;
 			}
 		}
 
-	  return result;
+	 
 	  
-	  _Game_BattlerBase_canPaySkillCost.call(this,skill);
+	 return _Game_BattlerBase_canPaySkillCost.call(this,skill);
 	  
   }
   
