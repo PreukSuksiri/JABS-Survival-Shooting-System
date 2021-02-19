@@ -116,12 +116,14 @@
  * @default 1
  * @arg Slot
  * @type select
- * @option Tool
- * @option Dodge
+ * @option R1
+  * @option R2
  * @option R1A
  * @option R1B
  * @option R1X
  * @option R1Y
+ * @option L1
+  * @option L2
  * @option L1A
  * @option L1B
  * @option L1X
@@ -132,12 +134,14 @@
  * @desc Unlocks a single JABS skill slot for the leader.
  * @arg Slot
  * @type select
- * @option Tool
- * @option Dodge
+  * @option R1
+  * @option R2
  * @option R1A
  * @option R1B
  * @option R1X
  * @option R1Y
+ * @option L1
+  * @option L2
  * @option L1A
  * @option L1B
  * @option L1X
@@ -440,6 +444,10 @@ J.ABS.Helpers.PluginManager.TranslateOptionToSlot = slot => {
     case "L1B": return Game_Actor.JABS_L1_B_SKILL;
     case "L1X": return Game_Actor.JABS_L1_X_SKILL;
     case "L1Y": return Game_Actor.JABS_L1_Y_SKILL;
+	case "L1": return Game_Actor.JABS_L1_SKILL;
+	case "L2": return Game_Actor.JABS_L2_SKILL;
+	case "R1": return Game_Actor.JABS_R1_SKILL;
+	case "R2": return Game_Actor.JABS_R2_SKILL;
   };
 };
 
@@ -523,15 +531,17 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Read Monster HP", args => {
 PluginManager.registerCommand(J.ABS.Metadata.Name, "Count Monster", args => {
 	const { TagIncluded, TagExcluded,OutputVariable } = args;
 	var cnt = 0;
-	for (var b in $gameMap._j._allBattlers)
+	var allbattlers = $gameMap._j._allBattlers;
+	for (var b in allbattlers)
 	{
+		var thisEvent = $dataMap.events[$gameMap._j._allBattlers[b]._event._eventId]//allbattlers[b]._event;//$gameMap.event($gameMap._j._allBattlers[b]._event._eventId).event();
 		var allow = true;
 		if (TagIncluded != null && TagIncluded != "")
 		{
 			var arrayTagIncluded = eval(TagIncluded);
 			for (var t in arrayTagIncluded)
 			{
-				if (arrayTagIncluded[t] != null && arrayTagIncluded[t] != "" && $gameMap.event($gameMap._j._allBattlers[b]._event._eventId).event().note.indexOf(arrayTagIncluded[t]) < 0)
+				if (arrayTagIncluded[t] != null && arrayTagIncluded[t] != "" && thisEvent.note.indexOf(arrayTagIncluded[t]) < 0)
 				{
 					allow = false;
 				}
@@ -543,7 +553,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Count Monster", args => {
 			var arrayTagExcluded = eval(TagExcluded);
 			for (var t in arrayTagExcluded)
 			{
-				if (arrayTagExcluded[t] != null && arrayTagExcluded[t] != "" && $gameMap.event($gameMap._j._allBattlers[b]._event._eventId).event().note.indexOf(arrayTagExcluded[t]) >= 0)
+				if (arrayTagExcluded[t] != null && arrayTagExcluded[t] != "" && thisEvent.note.indexOf(arrayTagExcluded[t]) >= 0)
 				{
 					allow = false;
 				}
@@ -668,19 +678,17 @@ J.ABS.Input.DirLeft = "left";
 J.ABS.Input.DirRight = "right";
 J.ABS.Input.A = "ok";
 J.ABS.Input.B = "cancel";
-J.ABS.Input.C = "65"; //A
-J.ABS.Input.D = "83"; //S
-J.ABS.Input.X = "shift";
-J.ABS.Input.Y = "tab";
-J.ABS.Input.R1 = "pagedown";
-J.ABS.Input.R2 = "r2";          // new!
-J.ABS.Input.R3 = "r3";          // new!
-J.ABS.Input.L1 = "pageup";
-J.ABS.Input.L2 = "l2";          // new!
-J.ABS.Input.L3 = "l3";          // new!
-J.ABS.Input.Start = "start";    // new!
-J.ABS.Input.Select = "select";  // new!
-J.ABS.Input.Cheat = "cheat"     // new!
+J.ABS.Input.X = "ok";
+J.ABS.Input.Y = "control";
+J.ABS.Input.R1 = "shift";
+J.ABS.Input.R2 = "caplocks";         
+J.ABS.Input.R3 = "r3";          
+J.ABS.Input.L1 = "tab";
+J.ABS.Input.L2 = "backtick";          
+J.ABS.Input.L3 = "l3";         
+J.ABS.Input.Start = "start";   
+J.ABS.Input.Select = "select";  
+J.ABS.Input.Cheat = "cheat"    
 
 /**
  * Rewrites gamepad button input to instead perform the various actions that
@@ -730,29 +738,29 @@ Input.keyMapper = {
   37: J.ABS.Input.DirLeft,    // arrow left
   39: J.ABS.Input.DirRight,   // arrow right
   90: J.ABS.Input.A,          // z
-  88: J.ABS.Input.B,          // x
-  65: J.ABS.Input.C,			  // a 67
-  83: J.ABS.Input.D, //s86
-  16: J.ABS.Input.X,          // shift
-  66: J.ABS.Input.Y,          // c 67 -> b 66
-  81: J.ABS.Input.L1,         // q
-  17: J.ABS.Input.L2,         // ctrl
-  69: J.ABS.Input.R1,         // e
-  9:  J.ABS.Input.R2,         // tab
+  88: J.ABS.Input.B,          // x		
+  32: J.ABS.Input.X,          // space
+  405: J.ABS.Input.Y,          // leftcontrol
+  9: J.ABS.Input.L1,         // tab
+  192: J.ABS.Input.L2,         // ` (backtick)
+  403: J.ABS.Input.R1,         // shift
+  20:  J.ABS.Input.R2,         // caplocks
   13: J.ABS.Input.Start,      // enter
   46: J.ABS.Input.Select,     // del
 
   // keyboard alternative for the multi-button skills.
-  49: "1",       // 1 = main
-  50: "2",       // 2 = off
-  51: "3",       // 3 = L1 + A
-  52: "4",       // 4 = L1 + B
-  53: "5",       // 5 = L1 + X
-  54: "6",       // 6 = L1 + Y
-  55: "7",       // 7 = R1 + A
-  56: "8",       // 8 = R1 + B
-  57: "9",       // 9 = R1 + X
-  48: "0",       // 0 = R1 + Y
+  49: "1",       // 1 
+  50: "2",       // 2
+  51: "3",       // 3 
+  52: "4",       // 4 
+  53: "5",       // 5 
+  54: "6",       // 6 
+  55: "7",       // 7
+  56: "8",       // 8
+  57: "9",       // 9 
+  48: "0",       // 0
+  45: "-",       // -
+  61: "=",       // =
 };
 //#endregion
 //#endregion Static objects
@@ -761,8 +769,10 @@ Input.keyMapper = {
 //#region Game_Actor
 Game_Actor.JABS_MAINHAND = "Main";
 Game_Actor.JABS_OFFHAND = "Off";
-Game_Actor.JABS_TOOLSKILL = "Tool";
-Game_Actor.JABS_DODGESKILL = "Dodge";
+Game_Actor.JABS_L1_SKILL = "L1";
+Game_Actor.JABS_L2_SKILL = "L2";
+Game_Actor.JABS_R1_SKILL = "R1";
+Game_Actor.JABS_R2_SKILL = "R2";
 Game_Actor.JABS_L1_A_SKILL = "L1 + A";
 Game_Actor.JABS_L1_B_SKILL = "L1 + B";
 Game_Actor.JABS_L1_X_SKILL = "L1 + X";
@@ -807,6 +817,10 @@ Game_Actor.prototype.initAbsSkills = function() {
   this._j._equippedSkills[Game_Actor.JABS_R1_B_SKILL] = { id: 0, locked: false, };
   this._j._equippedSkills[Game_Actor.JABS_R1_X_SKILL] = { id: 0, locked: false, };
   this._j._equippedSkills[Game_Actor.JABS_R1_Y_SKILL] = { id: 0, locked: false, };
+  this._j._equippedSkills[Game_Actor.JABS_L1_SKILL] = { id: 0, locked: false, };
+  this._j._equippedSkills[Game_Actor.JABS_L2_SKILL] = { id: 0, locked: false, };
+  this._j._equippedSkills[Game_Actor.JABS_R1_SKILL] = { id: 0, locked: false, };
+  this._j._equippedSkills[Game_Actor.JABS_R2_SKILL] = { id: 0, locked: false, };
   this.updateEquipmentSkills();
 }
 
@@ -834,7 +848,7 @@ Game_Actor.prototype.getEquippedSkill = function(slot) {
 Game_Actor.prototype.setEquippedSkill = function(slot, skillId, locked = false) {
   if (this.isSlotLocked(slot)) {
     console.warn("This slot is forcefully assigned and must be unlocked first.");
-    SoundManager.playBuzzer();
+    //SoundManager.playBuzzer();
     return;
   }
 
@@ -1408,8 +1422,17 @@ Game_CharacterBase.prototype.setDodgeBoost = function(dodgeMoveSpeed) {
  */
 J.ABS.Aliased.Game_CharacterBase.update = Game_CharacterBase.prototype.update;
 Game_CharacterBase.prototype.update = function() {
-  J.ABS.Aliased.Game_CharacterBase.update.call(this);
-  this.updateDodging();
+	try
+	{
+		J.ABS.Aliased.Game_CharacterBase.update.call(this);
+		this.updateDodging();
+	}
+	catch
+	{
+		
+	}
+	
+  
 };
 
 /**
@@ -3707,6 +3730,9 @@ class Game_BattleMap {
      * @type {boolean}
      */
     this._absPause = false;
+	
+	 this._lockAttack = false;
+	 this._lockAttackCoolDown = false;
     this.initializePlayerBattler();
   };
 
@@ -3978,56 +4004,151 @@ class Game_BattleMap {
     if ($gameMap.isEventRunning()) return;
 
     // strafing can be done concurrently to other actions.
-    //if (Input.isPressed(J.ABS.Input.L2)) {
-		if (Input.isPressed(J.ABS.Input.C)||Input.isPressed(J.ABS.Input.D)) {
+	
+	if (Input.isPressed(J.ABS.Input.X)||Input.isPressed(J.ABS.Input.Y)) {
       this.performStrafe(true);
     } else {
       this.performStrafe(false);
     }
 
     // rotating can be done concurrently to other actions.
-    //if (Input.isPressed(J.ABS.Input.X)) {
-		if (Input.isPressed(J.ABS.Input.X)) {
+		if (Input.isPressed(J.ABS.Input.R1)) {
       this.performRotate(true);
     } else {
       this.performRotate(false);
     }
+	
 
+/*
     // dodge roll
     if (Input.isTriggered(J.ABS.Input.R2)) {
       this.performDodgeRoll();
       return;
     }
+	*/
+	if (Input.isTriggered(J.ABS.Input.L1)) {
+		if ($gameParty.leader()._j._equippedSkills[Game_Actor.JABS_L1_SKILL].id != null && $gameParty.leader()._j._equippedSkills[Game_Actor.JABS_L1_SKILL].id != 0)
+		  {
+			  this.performSkillAction(9);
+		  }
+        
+      }
+	  if (Input.isTriggered(J.ABS.Input.L2)) {
+		  if ($gameParty.leader()._j._equippedSkills[Game_Actor.JABS_L2_SKILL].id != null && $gameParty.leader()._j._equippedSkills[Game_Actor.JABS_L2_SKILL].id != 0)
+		  {
+			   this.performSkillAction(10);
+		  }
+       
+      }
+	  
+	  if (Input.isTriggered(J.ABS.Input.R1)) {
+		  if ($gameParty.leader()._j._equippedSkills[Game_Actor.JABS_R1_SKILL] != null && $gameParty.leader()._j._equippedSkills[Game_Actor.JABS_R1_SKILL] != 0)
+		  {
+			  this.performSkillAction(11);
+		  }
+        
+      }
+	  
+	  if (Input.isTriggered(J.ABS.Input.R2)) {
+		  if ($gameParty.leader()._j._equippedSkills[Game_Actor.JABS_R2_SKILL] != null && $gameParty.leader()._j._equippedSkills[Game_Actor.JABS_R2_SKILL] != 0)
+		  {
+			  this.performSkillAction(12);
+		  }
+        
+      }
 
     // track for L1 + ABXY
-    if (Input.isPressed(J.ABS.Input.L1)) {
-      if (Input.isTriggered(J.ABS.Input.A)) {
-        this.performSkillAction(1);
-      } else if (Input.isTriggered(J.ABS.Input.B)) {
-        this.performSkillAction(2);
-      } else if (Input.isTriggered(J.ABS.Input.X)) {
-        this.performSkillAction(3);
-      } else if (Input.isTriggered(J.ABS.Input.Y)) {
-        this.performSkillAction(4);
-      }
-
-      return;
-    }
-
-    // track for R1 + ABXY
-    if (Input.isPressed(J.ABS.Input.R1)) {
-      if (Input.isTriggered(J.ABS.Input.A)) {
-        this.performSkillAction(5);
-      } else if (Input.isTriggered(J.ABS.Input.B)) {
-        this.performSkillAction(6);
-      } else if (Input.isTriggered(J.ABS.Input.X)) {
-        this.performSkillAction(7);
-      } else if (Input.isTriggered(J.ABS.Input.Y)) {
-        this.performSkillAction(8);
-      }
-
-      return;
-    }
+	if ($gameParty.leader()._j._equippedSkills[Game_Actor.JABS_L1_A_SKILL] != null && $gameParty.leader()._j._equippedSkills[Game_Actor.JABS_L1_A_SKILL] != 0)
+	  {
+		  if (Input.isPressed(J.ABS.Input.L1)) 
+		  {
+			  if (Input.isTriggered(J.ABS.Input.A))
+			  {
+				  this.performSkillAction(1);
+			  }
+		  }
+	  }
+  
+	if ($gameParty.leader()._j._equippedSkills[Game_Actor.JABS_L1_B_SKILL] != null && $gameParty.leader()._j._equippedSkills[Game_Actor.JABS_L1_B_SKILL] != 0)
+	  {
+		  if (Input.isPressed(J.ABS.Input.L1)) 
+		  {
+			  if (Input.isTriggered(J.ABS.Input.B))
+			  {
+				  this.performSkillAction(2);
+			  }
+		  }
+	  }
+		  
+	if ($gameParty.leader()._j._equippedSkills[Game_Actor.JABS_L1_X_SKILL] != null && $gameParty.leader()._j._equippedSkills[Game_Actor.JABS_L1_X_SKILL] != 0)
+	  {
+		  if (Input.isPressed(J.ABS.Input.L1)) 
+		  {
+			  if (Input.isTriggered(J.ABS.Input.X))
+			  {
+				  this.performSkillAction(3);
+			  }
+		  }
+	  }
+		 	  
+		  
+	if ($gameParty.leader()._j._equippedSkills[Game_Actor.JABS_L1_Y_SKILL] != null && $gameParty.leader()._j._equippedSkills[Game_Actor.JABS_L1_Y_SKILL] != 0)
+	  {
+		  if (Input.isPressed(J.ABS.Input.L1)) 
+		  {
+			  if (Input.isTriggered(J.ABS.Input.Y))
+			  {
+				  this.performSkillAction(4);
+			  }
+		  }
+	  }
+		 
+	if ($gameParty.leader()._j._equippedSkills[Game_Actor.JABS_R1_A_SKILL] != null && $gameParty.leader()._j._equippedSkills[Game_Actor.JABS_R1_A_SKILL] != 0)
+	  {
+		  if (Input.isPressed(J.ABS.Input.R1)) 
+		  {
+			  if (Input.isTriggered(J.ABS.Input.A))
+			  {
+				  this.performSkillAction(5);
+			  }
+		  }
+	  }
+		 
+	if ($gameParty.leader()._j._equippedSkills[Game_Actor.JABS_R1_B_SKILL] != null && $gameParty.leader()._j._equippedSkills[Game_Actor.JABS_R1_B_SKILL] != 0)
+	  {
+		  if (Input.isPressed(J.ABS.Input.R1)) 
+		  {
+			  if (Input.isTriggered(J.ABS.Input.B))
+			  {
+				  this.performSkillAction(6);
+			  }
+		  }
+	  }
+		 
+	if ($gameParty.leader()._j._equippedSkills[Game_Actor.JABS_R1_X_SKILL] != null && $gameParty.leader()._j._equippedSkills[Game_Actor.JABS_R1_X_SKILL] != 0)
+	  {
+		  if (Input.isPressed(J.ABS.Input.R1)) 
+		  {
+			  if (Input.isTriggered(J.ABS.Input.X))
+			  {
+				  this.performSkillAction(7);
+			  }
+		  }
+	  }
+	  
+	  
+	  if ($gameParty.leader()._j._equippedSkills[Game_Actor.JABS_R1_Y_SKILL] != null && $gameParty.leader()._j._equippedSkills[Game_Actor.JABS_R1_Y_SKILL] != 0)
+	  {
+		  if (Input.isPressed(J.ABS.Input.R1)) 
+		  {
+			  if (Input.isTriggered(J.ABS.Input.Y))
+			  {
+				  this.performSkillAction(8);
+			  }
+		  }
+	  }
+	  
+	
 
     // track for keyboard-exclusive input for skills.
     if (Input.isTriggered("1")) {
@@ -4068,26 +4189,86 @@ class Game_BattleMap {
       this.performSkillAction(8);
       return;
     }
-
-    // mainhand action
-    if (Input.isTriggered(J.ABS.Input.C) || Input.isPressed(J.ABS.Input.C)) {
-      this.performMainhandAction();
+	
+	if (Input.isTriggered("9")) {
+      this.performSkillAction(9);
+      return;
+    }
+	
+	if (Input.isTriggered("0")) {
+      this.performSkillAction(10);
+      return;
+    }
+	
+	if (Input.isTriggered("-")) {
+      this.performSkillAction(11);
+      return;
+    }
+	
+	if (Input.isTriggered("=")) {
+      this.performSkillAction(12);
+      return;
     }
 
-    // combat offhand action
-    // only able to perform this if the player doesn't have a guard skill in their offhand.
-    if (!this.getPlayerMapBattler().isGuardSkillByKey(Game_Actor.JABS_OFFHAND) && 
-      (Input.isTriggered(J.ABS.Input.D) || Input.isTriggered("control"))) {
-        this.performOffhandAction();
-    }
-
+	
+   //combat
+	if (!$gameBattleMap.absPause && !$gamePlayer.triggerAction() && $gameBattleMap.absEnabled && !$gameMessage.isBusy())
+	{
+		if ($gameBattleMap._lockAttack && !$gameBattleMap._lockAttackCoolDown)
+		{
+			$gameBattleMap._lockAttackCoolDown = true;
+			setTimeout(function(){
+				if ($gameBattleMap._lockAttackCoolDown)
+				{
+					$gameBattleMap._lockAttackCoolDown = false;
+					if (!$gameBattleMap.absPause && !$gamePlayer.triggerAction() && $gameBattleMap.absEnabled && !$gameMessage.isBusy())
+					{
+						$gameBattleMap._lockAttack = false;
+					}
+				}
+				
+				
+				
+			},200);
+			
+		}
+		
+	}
+    else
+	{
+		$gameBattleMap._lockAttack = true;
+		$gameBattleMap._lockAttackCoolDown = false;
+	}
+	
+	if (!$gameBattleMap.absPause && !$gamePlayer.triggerAction() && $gameBattleMap.absEnabled && !$gameMessage.isBusy() && !$gameBattleMap._lockAttack)
+	{
+		 // mainhand action
+		if (Input.isTriggered(J.ABS.Input.X) || Input.isPressed(J.ABS.Input.X)) {
+		  this.performMainhandAction();
+		}
+		
+		// combat offhand action
+		if (Input.isTriggered(J.ABS.Input.Y) || Input.isPressed(J.ABS.Input.Y)) {
+			this.performOffhandAction();
+		}
+	}
+    
+	
+	/*
+		if (!this.getPlayerMapBattler().isGuardSkillByKey(Game_Actor.JABS_OFFHAND) && 
+		  (Input.isTriggered(J.ABS.Input.Y) || Input.isPressed(J.ABS.Input.Y))) {
+			this.performOffhandAction();
+		}
+		*/
+    
+/*
     // tool action
-    if (Input.isTriggered(J.ABS.Input.Y)) {
+    if (Input.isTriggered(J.ABS.Input.L2)) {
       this.performToolAction();
     }
-
+*/
     // menu
-    if (Input.isTriggered(J.ABS.Input.Start) || Input.isTriggered("escape") || Input.isTriggered("cancel")) {
+    if (Input.isTriggered(J.ABS.Input.Start) || Input.isTriggered("escape") || Input.isTriggered("cancel") || Input.isTriggered("enter")) {
 		//this.performMenuAction();
 		SceneManager.push(Scene_Menu);
 	  }
@@ -4177,13 +4358,26 @@ class Game_BattleMap {
       case 8: // R1 + Y
         mapActions = this.getSkillActionData(battler, Game_Actor.JABS_R1_Y_SKILL);
         break;
+	  case 9: // L1
+        mapActions = this.getSkillActionData(battler, Game_Actor.JABS_L1_SKILL);
+        break;
+	  case 10: // L2
+        mapActions = this.getSkillActionData(battler, Game_Actor.JABS_L2_SKILL);
+        break;
+	  case 11: // R1
+        mapActions = this.getSkillActionData(battler, Game_Actor.JABS_R1_SKILL);
+        break;
+	  case 12: // R2
+        mapActions = this.getSkillActionData(battler, Game_Actor.JABS_R2_SKILL);
+        break;
+		
     }
 
     if (mapActions && mapActions.length) {
       this.executeMapActions(battler, mapActions);
     } else {
       // either no skill equipped in that slot, or its not off cooldown.
-      SoundManager.playCancel();
+     // SoundManager.playCancel();
     }
   };
 
@@ -6629,6 +6823,10 @@ class JABS_Battler {
       this.initializeCooldown(Game_Actor.JABS_R1_B_SKILL, 0);
       this.initializeCooldown(Game_Actor.JABS_R1_X_SKILL, 0);
       this.initializeCooldown(Game_Actor.JABS_R1_Y_SKILL, 0);
+	  this.initializeCooldown(Game_Actor.JABS_L1_SKILL, 0);
+	  this.initializeCooldown(Game_Actor.JABS_L2_SKILL, 0);
+	  this.initializeCooldown(Game_Actor.JABS_R1_SKILL, 0);
+	  this.initializeCooldown(Game_Actor.JABS_R2_SKILL, 0);
     }
   };
 
