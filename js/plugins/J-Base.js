@@ -677,7 +677,26 @@ Game_Character.prototype.isInanimate = function() {
       }
     })
   }
-
+  /*
+  if (inanimate)
+  {
+	  if (this.list > 0)
+	  {
+		  this.list().forEach(command => {
+			if (referenceData.matchesControlCode(command.code)) {
+			  const line = command.parameters[0];
+			  if (line.match(/<reanimate>/i)) {
+				return false;
+			  } 
+			}
+		  });
+	  }
+	  
+	  
+	  
+	 
+  }
+*/
   return inanimate;
 };
 

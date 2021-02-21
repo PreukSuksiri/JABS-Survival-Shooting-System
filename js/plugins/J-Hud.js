@@ -236,6 +236,11 @@ Window_Hud.prototype.refresh = function() {
  * Draws the contents of the Hud.
  */
 Window_Hud.prototype.drawHud = function() {
+var isactive = eval(J.Hud.PluginParameters['Enabled']);
+	if (!$gameBattleMap.absEnabled || !isactive)
+	{
+		return;
+	}
   const actor = $gameParty.leader();
   this._actor = actor;
   this.drawFace(this._actor.faceName(), this._actor.faceIndex(), 0, 0, 128, 72);
@@ -407,23 +412,31 @@ var getWeaponID = allEquipmentOfBattler[0]._itemId
 var getArmorID = allEquipmentOfBattler[1]._itemId
 var getBulletID = 9;
 var getBulletRemaining = 300;
-const weaponkey = "actor%1-mainweapon-%2-icon".format(this._actor.actorId(), getWeaponID);
-const armorkey = "actor%1-subweapon-%2-icon".format(this._actor.actorId(), getArmorID);
-const bulletkey = "actor%1-mainweapon-bullet-number-%2".format(this._actor.actorId(), getBulletID);
+const weaponkey = "actor%1-mainweapon-icon".format(this._actor.actorId(), getWeaponID);
+const armorkey = "actor%1-subweapon-icon".format(this._actor.actorId(), getArmorID);
+const bulletkey = "actor%1-mainweapon-bullet-number-icon".format(this._actor.actorId(), getBulletID);
 
 
 if (getWeaponID != null && getWeaponID != 0)
 {
 	var getWeaponIconID = $dataWeapons[getWeaponID].iconIndex;
 	
-	
+		if (this._hudSprites[weaponkey] != null)	
+		{
+			this._hudSprites[weaponkey].destroy();
+			delete this._hudSprites[weaponkey];
+		}
 		  const wsprite = this.createStateIconSprite(weaponkey, getWeaponIconID);
 		  wsprite.move(130, -2);
 		  wsprite.show();
-		  
-		  
-		  
-		  
+
+
+		if (this._hudSprites[bulletkey] != null)	
+		{
+			this._hudSprites[bulletkey].destroy();
+			delete this._hudSprites[bulletkey];
+		}
+		
 		  const bsprite = this.createNumberSprite(bulletkey, "bullet", 5);
 		  bsprite.move(90, 2);
 		  bsprite.show();
@@ -444,7 +457,11 @@ if (getArmorID != null && getArmorID != 0)
 {
 	var getArmorIconID = $dataArmors[getArmorID].iconIndex;
 
-	
+	if (this._hudSprites[armorkey] != null)	
+		{
+			this._hudSprites[armorkey].destroy();
+			delete this._hudSprites[armorkey];
+		}
 		  const asprite = this.createStateIconSprite(armorkey, getArmorIconID);
 		  asprite.move(130, -2+iconWidth + 4);
 		  asprite.show();
@@ -759,6 +776,11 @@ Sprite_ActorValue.prototype.initMembers = function(actor, parameter, fontSizeMod
   this._j._last._mp = actor.mp;
   this._j._last._tp = actor.tp;
   this._j._last._xp = actor.currentExp();
+   this._j._last._equip0 = this._j._actor._equips[0]._itemId;
+  this._j._last._equip1 = this._j._actor._equips[1]._itemId;
+  this._j._last._equip2 = this._j._actor._equips[2]._itemId;
+  this._j._last._equip3 = this._j._actor._equips[3]._itemId;
+  this._j._last._equip4 = this._j._actor._equips[4]._itemId;
   
   if (this._j._actor._equips[0]._itemId != null && this._j._actor._equips[0]._itemId > 0)
 		{
@@ -817,24 +839,24 @@ Sprite_ActorValue.prototype.refresh = function() {
  * Checks whether or not a given parameter has changed.
  */
 Sprite_ActorValue.prototype.hasParameterChanged = function() {
-  let changed = true;
+  let changed = false;
   switch (this._j._parameter) {
     case "hp": 
       changed = this._j._actor.hp != this._j._last._hp;
       if (changed) this._j._last._hp = this._j._actor.hp;
-      return changed;
+      
     case "mp": 
       changed = this._j._actor.mp != this._j._last._mp;
       if (changed) this._j._last._mp = this._j._actor.mp;
-      return changed;
+      
     case "tp": 
       changed = this._j._actor.tp != this._j._last._tp;
       if (changed) this._j._last.tp = this._j._actor.tp;
-      return changed;
+     
     case "xp": 
       changed = this._j._actor.currentExp() != this._j._last._xp;
       if (changed) this._j._last._xp = this._j._actor.currentExp();
-      return changed;
+      
 	case "bullet": 
 		if (this._j._actor._equips[0]._itemId != null && this._j._actor._equips[0]._itemId > 0)
 		{
@@ -854,11 +876,41 @@ Sprite_ActorValue.prototype.hasParameterChanged = function() {
 
 				} 
 		}
-	
- 
-			
-      return changed;
+      
   }
+  
+  
+  if (!changed && this._j._actor._equips[0]._itemId != this._j._last._equip0)
+  {
+	  this._j._last._equip0 = this._j._actor._equips[0]._itemId;
+	 changed = true;
+  }
+  
+  if (!changed && this._j._actor._equips[1]._itemId != this._j._last._equip1)
+  {
+	  this._j._last._equip11 = this._j._actor._equips[1]._itemId;
+	  changed = true;
+  }
+  
+  if (!changed && this._j._actor._equips[2]._itemId != this._j._last._equip2)
+  {
+	  this._j._last._equip2 = this._j._actor._equips[2]._itemId;
+	  changed = true;
+  }
+  
+  if (!changed && this._j._actor._equips[3]._itemId != this._j._last._equip3)
+  {
+	  this._j._last._equip3 = this._j._actor._equips[3]._itemId;
+	  changed = true;
+  }
+  
+  if (!changed && this._j._actor._equips[4]._itemId != this._j._last._equip4)
+  {
+	  this._j._last._equip4 = this._j._actor._equips[4]._itemId;
+	  changed = true;
+  }
+  
+  return changed;
 };
 
 /**

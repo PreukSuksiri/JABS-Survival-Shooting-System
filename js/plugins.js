@@ -14,9 +14,10 @@ var $plugins =
 {"name":"J-TextLog","status":false,"description":"A non-battle-reliant text log (designed for JABS, though).","parameters":{"BreakHead":"----------------------------------","Extensions":"Modify Below","BreakSettings":"----------------------------------","Enabled":"false"}},
 {"name":"J-ControlledDrops","status":true,"description":"A","parameters":{}},
 {"name":"J-ABS","status":true,"description":"Welcome to JABS,\nJ's Action Battle System!\nUPDATE 2 Feb 2021 : Implemented Survival Shooter","parameters":{"BreakHead":"----------------------------------","Extensions":"Modify Below","BreakSettings":"----------------------------------","ABS System":"true","Default Enemy Prepare Time":"180","Default Action Map Id":"2","Default Attack Animation Id":"1","Default Dodge Skill Type Id":"1","Default Guard Skill Type Id":"2","Default Tool Cooldown Time":"300","Bullet Block Terrain Tag":"1","Show MP Gauge in HUD":"false","Show TP Gauge in HUD":"false","Show EXP Gauge in HUD":"false","Show weapons and bullets in HUD":"true","Show pop up skill icon":"false","Show pop up reward":"false","Show monster emotion balloon":"false","Show monster health gauge":"true"}},
-{"name":"J-ABS-ActionKeys","status":true,"description":"The Action Keys for JABS.","parameters":{"BreakHead":"----------------------------------","Extensions":"Modify Below","BreakSettings":"----------------------------------","Enabled":"false"}},
+{"name":"J-ABS-ActionKeys","status":false,"description":"The Action Keys for JABS.","parameters":{"BreakHead":"----------------------------------","Extensions":"Modify Below","BreakSettings":"----------------------------------","Enabled":"false"}},
 {"name":"MOG_EventText","status":false,"description":"(v1.0) Adiciona um texto em cima do evento.","parameters":{"X axis":"0","Y axis":"0","Font Size":"18"}},
 {"name":"J-CMS-MainMenu","status":true,"description":"A menu rewrite.","parameters":{}},
 {"name":"IncreaseItemLimit","status":true,"description":"Increase max item limit.","parameters":{"maxitem":"99999"}},
-{"name":"ItemConsumeSkill","status":true,"description":"make the skill that consumes item, not only MP and/or TP","parameters":{"Consume Item Color":"17","Consume Item Text":"\"Ammo\""}}
+{"name":"ItemConsumeSkill","status":true,"description":"make the skill that consumes item, not only MP and/or TP","parameters":{"Consume Item Color":"17","Consume Item Text":"\"Ammo\""}},
+{"name":"ThaiFontAutoAdjuster","status":true,"description":"ปรับตัวอักษรภาษาไทยไปตามยถากรรม","parameters":{}}
 ];
