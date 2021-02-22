@@ -6778,7 +6778,6 @@ class JABS_Battler {
      * @type {number}
      */
     this._animationFrames = 0;
-
     /**
      * Whether or not this battler is currently animating.
      * @type {boolean}
@@ -8311,14 +8310,17 @@ class JABS_Battler {
     let suffix = "";
     let index = this.getCharacterSpriteIndex();
     let duration = 0;
+
     if (skill._jabs.poseSuffix) {
       const notedata = skill._jabs.poseSuffix;
       suffix = notedata[0];
       index = notedata[1];
       duration = notedata[2];
+
       newCharacterSprite = `${baseSpriteName}${suffix}`;
       this.captureBaseSpriteInfo();
       this.setAnimationCount(duration);
+	  
     } else {
       return;
     }
@@ -8384,11 +8386,11 @@ class JABS_Battler {
     if (this._animationFrames > 0) {
       this._animationFrames--;
       if (this._animationFrames < 4) {
-        this.getCharacter()._pattern = 0;
+        //this.getCharacter()._pattern = 0;
       } else if (this._animationFrames > 10) {
-        this.getCharacter()._pattern = 2;
+        //this.getCharacter()._pattern = 2;
       } else {
-        this.getCharacter()._pattern = 1;
+        //this.getCharacter()._pattern = 1;
       }
     } else {
       this.resetAnimation();
