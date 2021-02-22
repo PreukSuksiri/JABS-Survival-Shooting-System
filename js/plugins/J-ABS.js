@@ -4221,6 +4221,28 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
     }
 	
    //combat
+    
+   if (!$gameBattleMap.absPause && $gameBattleMap.absEnabled && !$gameMessage.isBusy())
+   {
+	  if (!Input.isTriggered(J.ABS.Input.Y) && !Input.isPressed(J.ABS.Input.Y))
+	   {
+		   if (Input.isTriggered(J.ABS.Input.X) || Input.isPressed(J.ABS.Input.X)) {
+			  this.performMainhandAction();
+			}
+	   }
+	   
+		
+		if (!Input.isTriggered(J.ABS.Input.X) &&!Input.isPressed(J.ABS.Input.X))
+	   {
+		   if (Input.isTriggered(J.ABS.Input.Y) || Input.isPressed(J.ABS.Input.Y)) {
+			this.performOffhandAction();
+			}
+	   }
+		
+   }
+   
+   
+   /*
 	if (!$gameBattleMap.absPause && !$gamePlayer.triggerAction() && $gameBattleMap.absEnabled && !$gameMessage.isBusy())
 	{
 		if ($gameBattleMap._lockAttack && !$gameBattleMap._lockAttackCoolDown)
@@ -4261,7 +4283,7 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 			this.performOffhandAction();
 		}
 	}
-    
+    */
 	
 	/*
 		if (!this.getPlayerMapBattler().isGuardSkillByKey(Game_Actor.JABS_OFFHAND) && 
@@ -4288,11 +4310,16 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
    */
   performMainhandAction() {
     const battler = this.getPlayerMapBattler();
+	
     if (!this.isMainhandActionReady() || !battler.canBattlerUseAttacks()) {
       return;
     }
+	
     const actions = battler.getAttackData(Game_Actor.JABS_MAINHAND);
-    if (!actions || !actions.length) return;
+    if (!actions || !actions.length) 
+	{
+		return;
+	}
 
     actions.forEach(action => action.setCooldownType(Game_Actor.JABS_MAINHAND));
     this.executeMapActions(battler, actions);
@@ -4758,6 +4785,7 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
    * @param {JABS_Action} action The `JABS_Action` to execute.
    */
   applyCooldownCounters(caster, action) {
+	  
     if (!caster.isPlayer()) {
       caster.modCooldownCounter(action.getCooldownType(), action.getCooldown());
     } else {
@@ -5031,6 +5059,8 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
     const skill = action.getBaseSkill();
     if (!skill._jabs.combo) {
       if (!action.getCooldownChecked()) {
+		  
+
         // if the cooldown has not yet been applied, apply it.
         caster.setCooldownCounter(action.getCooldownType(), action.getCooldown());
         action.setCooldownChecked();
@@ -7886,6 +7916,10 @@ class JABS_Battler {
    * @param {number} duration The duration of this cooldown.
    */
   setCooldownCounter = (cooldownKey, duration) => {
+	  if (!this._cooldowns[cooldownKey].ready)
+	  {
+		  return;
+	  }
     this._cooldowns[cooldownKey].frames = duration;
     if (this._cooldowns[cooldownKey].frames == 0) {
       this._cooldowns[cooldownKey].ready = true;
