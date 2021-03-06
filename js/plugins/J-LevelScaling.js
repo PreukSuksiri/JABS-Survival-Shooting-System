@@ -75,8 +75,8 @@ J.LevelScaling.Aliased.Game_Action.BaseDamage = Game_Action.prototype.makeDamage
 Game_Action.prototype.makeDamageValue = function(target, critical) {
   const baseDamage = J.LevelScaling.Aliased.Game_Action.BaseDamage.call(this, target, critical);
   const multiplier = J.LevelScaling.Utilities.determineScalingMultiplier(
-    this.subject().level, 
-    target.level);
+    target.level, 
+    this.subject().level);
   
   const result = baseDamage * multiplier;
   return result;
@@ -139,8 +139,8 @@ Game_Party.prototype.averageActorLevel = function() {
  * Determines the scaling multiplier.
  * 
  * Based on the difference between user's level and target's level.
- * @param {number} user The level of the user.
  * @param {number} target The level of the target.
+ * @param {number} user The level of the user.
  * @returns A decimal representing the multiplier for the damage scaling.
  */
 J.LevelScaling.Utilities.determineScalingMultiplier = function(target, user) {
@@ -148,18 +148,18 @@ J.LevelScaling.Utilities.determineScalingMultiplier = function(target, user) {
     user == 0 || target == 0) 
       return 1.0;
   const compared = target - user;
-  if (compared < -9) return 3.0;     // 10 or more levels higher than the target.
+  if (compared < -9) return 2.0;     // 10 or more levels higher than the target.
   else if (compared > 9) return 0.1; // 10 or more levels lower than the target.
   
   switch (compared) {
-    case -9: return 2.6;  // nine levels above the target.
-    case -8: return 2.3
-    case -7: return 2.0;
-    case -6: return 1.8;
-    case -5: return 1.6;  // five levels above the target.
-    case -4: return 1.4;
-    case -3: return 1.2;
-    case -2: return 1.1;
+    case -9: return 1.8;  // nine levels above the target.
+    case -8: return 1.6;
+    case -7: return 1.5;
+    case -6: return 1.4;
+    case -5: return 1.3;  // five levels above the target.
+    case -4: return 1.2;
+    case -3: return 1.1;
+    case -2: return 1.0;
     case -1: return 1.0;
     case 0: return 1.0;   // same level as the target.
     case 1: return 1.0;

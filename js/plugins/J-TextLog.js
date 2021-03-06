@@ -142,13 +142,23 @@ Scene_Map.prototype.onMapLoaded = function() {
  * Creates the internal text log for JABS.
  */
 Scene_Map.prototype.createJabsTextLog = function() {
-  const ww = 600; // width
-  const wh = 220; // height
-  const wx = -45; // location X
-  const wy = 485; // location Y
+  const ww = 640; // width
+  const wh = 180; // height
+  const wx = -4; // location X
+  const wy = Graphics.height - wh - 4; // location Y
   const rect = new Rectangle(wx, wy, ww, wh);
   this._j._mapTextLog = this._j._mapTextLog || new Window_TextLog(rect);
   this.addWindow(this._j._mapTextLog);
+};
+
+/**
+ * Toggles the visibility and functionality of the externally managed text log.
+ * @param {boolean} toggle Whether or not to display the external text log.
+ */
+Scene_Map.prototype.toggleLog = function(toggle = true) {
+  if (J.TextLog.Metadata.Enabled) {
+    this._j._mapTextLog.toggle(toggle);
+  }
 };
 //#endregion Scene_Map
 
@@ -336,8 +346,9 @@ Window_TextLog.prototype.toggle = function(toggle = !this._enabled) {
  * @returns {boolean} True if the log can be updated, false otherwise.
  */
 Window_TextLog.prototype.canUpdate = function() {
-  if (!this.contents || (!this._enabled || !J.TextLog.Metadata.Active)) {
-    return false;
+  if (!this.contents || (!this._enabled || 
+    !J.TextLog.Metadata.Active || $gameMessage.isBusy())) {
+      return false;
   }
 
   return true;
@@ -381,7 +392,7 @@ Window_TextLog.prototype.playerInterference = function() {
   const player = $gamePlayer;
   const playerX = player.screenX();
   const playerY = player.screenY();
-  if (playerX < this.width && playerY > this.y) {
+  if (playerX < (this.width + 50) && playerY > (this.y - 50)) {
     return true;
   }
 
@@ -396,12 +407,12 @@ Window_TextLog.prototype.interferenceOpacity = function() {
   const keys = Object.keys(sprites);
   keys.forEach(key => {
     const sprite = sprites[key];
-    if (sprite.opacity > 64) sprite.opacity -= 15;
-    if (sprite.opacity < 64) sprite.opacity += 1;
+    if (sprite.opacity > 0) sprite.opacity -= 15;
+    if (sprite.opacity < 0) sprite.opacity += 1;
   });
 
-  if (this.opacity > 64) this.opacity -= 15;
-  if (this.opacity < 64) this.opacity += 1;
+  if (this.opacity > 0) this.opacity -= 15;
+  if (this.opacity < 0) this.opacity += 1;
 };
 
 /**

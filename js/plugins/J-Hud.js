@@ -128,6 +128,23 @@ Scene_Map.prototype.mapNameWindowRect = function() {
     return J.Hud.Aliased.mapNameWindowRect.call(this);
   }
 };
+
+/**
+ * Toggles the visibility and functionality of the built-in JABS hud.
+ * @param {boolean} toggle Whether or not to display the default hud.
+ */
+Scene_Map.prototype.toggleHud = function(toggle = true) {
+  if (J.Hud.Metadata.Enabled) {
+    this._j._hud.toggle(toggle);
+  }
+};
+
+/**
+ * Refreshes the hud on-command.
+ */
+Scene_Map.prototype.refreshHud = function() {
+  this._j._hud.refresh();
+};
 //#endregion Scene_Map
 //#endregion Scene objects
 
@@ -211,7 +228,7 @@ Window_Hud.prototype.toggle = function(toggle = !this._enabled) {
  */
 Window_Hud.prototype.canUpdate = function() {
   if (!$gameParty || !$gameParty.leader() || !this.contents || 
-    !this._enabled || !J.Hud.Metadata.Active) {
+    !this._enabled || !J.Hud.Metadata.Active || $gameMessage.isBusy()) {
       return false;
   }
 
@@ -236,11 +253,6 @@ Window_Hud.prototype.refresh = function() {
  * Draws the contents of the Hud.
  */
 Window_Hud.prototype.drawHud = function() {
-var isactive = eval(J.Hud.PluginParameters['Enabled']);
-	if (!$gameBattleMap.absEnabled || !isactive)
-	{
-		return;
-	}
   const actor = $gameParty.leader();
   this._actor = actor;
   this.drawFace(this._actor.faceName(), this._actor.faceIndex(), 0, 0, 128, 72);
@@ -250,7 +262,6 @@ var isactive = eval(J.Hud.PluginParameters['Enabled']);
   {
 	  this.drawWeapons();
   }
-  
   this.drawStates();
   //this.drawSideviewBattler(); // need to figure out how sideview battlers work.
   if (this.playerInterference()) {
@@ -341,6 +352,7 @@ Window_Hud.prototype.createBattlerSprite = function(key) {
  * A component of the Hud-drawing: draws the status gauges.
  */
 Window_Hud.prototype.drawHudGaugeSprites = function() {
+ 
   if (J.ABS.Metadata.ShowEXPGaugeInHUD)
   {
 	  this.placeGaugeSprite("hp", 100, 0, 200, 24, 14);
@@ -362,17 +374,13 @@ Window_Hud.prototype.drawHudGaugeSprites = function() {
   {
 	  this.placeGaugeSprite("time", 0, 72, 128, 22, 20);
   }
-  
-  
-  
 };
 
 /**
  * A component of the Hud-drawing: draws the numbers to match the gauges.
  */
 Window_Hud.prototype.drawHudNumberSprites = function() {
-	
-  if (J.ABS.Metadata.ShowEXPGaugeInHUD)
+   if (J.ABS.Metadata.ShowEXPGaugeInHUD)
   {
 	  this.placeNumberSprite("hp", 90, -2, 5);
   }
@@ -394,17 +402,14 @@ Window_Hud.prototype.drawHudNumberSprites = function() {
   {
 	  this.placeNumberSprite("xp", -110, 76);
   }
-  
-  
-  
 };
+
 /**
  * Draws weapons icon
  */
 Window_Hud.prototype.drawWeapons = function() {
   
   const iconWidth = ImageManager.iconWidth;
-
   const player = $gameBattleMap.getPlayerMapBattler();
   
   var allEquipmentOfBattler = player._battler._equips;
@@ -415,8 +420,6 @@ var getBulletRemaining = 300;
 const weaponkey = "actor%1-mainweapon-icon".format(this._actor.actorId(), getWeaponID);
 const armorkey = "actor%1-subweapon-icon".format(this._actor.actorId(), getArmorID);
 const bulletkey = "actor%1-mainweapon-bullet-number-icon".format(this._actor.actorId(), getBulletID);
-
-
 if (getWeaponID != null && getWeaponID != 0)
 {
 	var getWeaponIconID = $dataWeapons[getWeaponID].iconIndex;
@@ -429,8 +432,6 @@ if (getWeaponID != null && getWeaponID != 0)
 		  const wsprite = this.createStateIconSprite(weaponkey, getWeaponIconID);
 		  wsprite.move(130, -2);
 		  wsprite.show();
-
-
 		if (this._hudSprites[bulletkey] != null)	
 		{
 			this._hudSprites[bulletkey].destroy();
@@ -452,11 +453,9 @@ else
       }
     })
 }
-
 if (getArmorID != null && getArmorID != 0)
 {
 	var getArmorIconID = $dataArmors[getArmorID].iconIndex;
-
 	if (this._hudSprites[armorkey] != null)	
 		{
 			this._hudSprites[armorkey].destroy();
@@ -477,9 +476,7 @@ else
 	
 	
 }
-
 	
-
 };
 
 /**
@@ -490,28 +487,32 @@ Window_Hud.prototype.drawStates = function() {
   const iconWidth = ImageManager.iconWidth;
   if (!this._actor.states().length) return;
 
-  const player = $gameBattleMap.getPlayerMapBattler();
-  this._actor.states().forEach((state, i) => {
-    const stateData = player.getStateData(state.id);
-    if (stateData && stateData.active) {
-      this.drawState(state, 124 + i*iconWidth, 70);
-    }
-  })
+  if (J.ABS && J.ABS.Metadata.Enabled) {
+    const player = $gameBattleMap.getPlayerMapBattler();
+    this._actor.states().forEach((state, i) => {
+      const stateData = player.getStateData(state.id);
+      if (stateData && stateData.active) {
+        this.drawState(state, 124 + i*iconWidth, 70);
+      }
+    })
+  }
 };
 
 /**
  * Hides the sprites associated with a given state id.
  */
 Window_Hud.prototype.hideExpiredStates = function() {
-  const allStateData = $gameBattleMap.getPlayerMapBattler().getAllStateData();
-  Object.keys(allStateData).forEach(stateKey => {
-    Object.keys(this._hudSprites).forEach(spriteKey => {
-      const match = `state-${stateKey}`;
-      if (spriteKey.contains(match) && !allStateData[stateKey].active) {
-        this._hudSprites[spriteKey].hide()
-      }
+  if (J.ABS && J.ABS.Metadata.Enabled) {
+    const allStateData = $gameBattleMap.getPlayerMapBattler().getAllStateData();
+    Object.keys(allStateData).forEach(stateKey => {
+      Object.keys(this._hudSprites).forEach(spriteKey => {
+        const match = `state-${stateKey}`;
+        if (spriteKey.contains(match) && !allStateData[stateKey].active) {
+          this._hudSprites[spriteKey].hide()
+        }
+      })
     })
-  })
+  }
 };
 
 /**
@@ -521,9 +522,11 @@ Window_Hud.prototype.hideExpiredStates = function() {
  * @param {number} y The `y` coordinate to draw this state at.
  */
 Window_Hud.prototype.drawState = function(state, x, y) {
-  const stateData = $gameBattleMap.getPlayerMapBattler().getStateData(state.id);
-  this.placeStateIconSprite(state.id, state.iconIndex, x, y);
-  this.placeStateTimerSprite(state.id, stateData, x, y);
+  if (J.ABS && J.ABS.Metadata.Enabled) {
+    const stateData = $gameBattleMap.getPlayerMapBattler().getStateData(state.id);
+    this.placeStateIconSprite(state.id, state.iconIndex, x, y);
+    this.placeStateTimerSprite(state.id, stateData, x, y);
+  }
 };
 
 /**
@@ -704,18 +707,14 @@ Sprite_StateTimer.prototype.loadBitmap = function() {
 };
 
 Sprite_StateTimer.prototype.updateCooldownText = function() {
-	if (this._j._stateData != null)
-	{
-		 this.bitmap.clear();
-	  const durationRemaining = (this._j._stateData.duration / 60).toFixed(1);
+  this.bitmap.clear();
+  const durationRemaining = (this._j._stateData.duration / 60).toFixed(1);
 
-	  this.bitmap.drawText(
-		durationRemaining.toString(), 
-		0, 0, 
-		this.bitmapWidth(), this.bitmapHeight(), 
-		"center");
-	}
- 
+  this.bitmap.drawText(
+    durationRemaining.toString(), 
+    0, 0, 
+    this.bitmapWidth(), this.bitmapHeight(), 
+    "center");
 };
 
 /**
@@ -776,30 +775,6 @@ Sprite_ActorValue.prototype.initMembers = function(actor, parameter, fontSizeMod
   this._j._last._mp = actor.mp;
   this._j._last._tp = actor.tp;
   this._j._last._xp = actor.currentExp();
-   this._j._last._equip0 = this._j._actor._equips[0]._itemId;
-  this._j._last._equip1 = this._j._actor._equips[1]._itemId;
-  this._j._last._equip2 = this._j._actor._equips[2]._itemId;
-  this._j._last._equip3 = this._j._actor._equips[3]._itemId;
-  this._j._last._equip4 = this._j._actor._equips[4]._itemId;
-  
-  if (this._j._actor._equips[0]._itemId != null && this._j._actor._equips[0]._itemId > 0)
-		{
-				var skillidtag = $dataWeapons[this._j._actor._equips[0]._itemId].meta.skillId;
-				var skillid = skillidtag;
-				var itemconsumetag = $dataSkills[skillid].meta.item_consume;
-
-				if (itemconsumetag){
-					var arrayResult = eval(itemconsumetag);
-					var itemconsumeid = arrayResult[0];
-
-					var itemdata = $dataItems[itemconsumeid];
-								var itemamount = $gameParty.numItems(itemdata);
-						  this._j._last._bullet = itemamount;
-				} 
-		}
-		
-		
-	
   this._j._autoCounter = 60;
 };
 
@@ -839,78 +814,76 @@ Sprite_ActorValue.prototype.refresh = function() {
  * Checks whether or not a given parameter has changed.
  */
 Sprite_ActorValue.prototype.hasParameterChanged = function() {
-  let changed = false;
+  let changed = true;
   switch (this._j._parameter) {
     case "hp": 
       changed = this._j._actor.hp != this._j._last._hp;
       if (changed) this._j._last._hp = this._j._actor.hp;
-      
+      return changed;
     case "mp": 
       changed = this._j._actor.mp != this._j._last._mp;
       if (changed) this._j._last._mp = this._j._actor.mp;
-      
+      return changed;
     case "tp": 
       changed = this._j._actor.tp != this._j._last._tp;
       if (changed) this._j._last.tp = this._j._actor.tp;
-     
+      return changed;
     case "xp": 
       changed = this._j._actor.currentExp() != this._j._last._xp;
       if (changed) this._j._last._xp = this._j._actor.currentExp();
-      
+      return changed;
+	  case "xp": 
+      changed = this._j._actor.currentExp() != this._j._last._xp;
+      if (changed) this._j._last._xp = this._j._actor.currentExp();
 	case "bullet": 
-		if (this._j._actor._equips[0]._itemId != null && this._j._actor._equips[0]._itemId > 0)
-		{
-				var skillidtag = $dataWeapons[this._j._actor._equips[0]._itemId].meta.skillId;
-				var skillid = skillidtag;
-				var itemconsumetag = $dataSkills[skillid].meta.item_consume;
-
-				if (itemconsumetag){
-					var arrayResult = eval(itemconsumetag);
-					var itemconsumeid = arrayResult[0];
-
-					var itemdata = $dataItems[itemconsumeid];
-								var itemamount = $gameParty.numItems(itemdata);
-								
-						  changed = itemamount != this._j._last._bullet;
-						  if (changed) this._j._last._bullet = itemamount;
-
-				} 
-		}
-      
+			if (this._j._actor._equips[0]._itemId != null && this._j._actor._equips[0]._itemId > 0)
+			{
+					var skillidtag = $dataWeapons[this._j._actor._equips[0]._itemId].meta.skillId;
+					var skillid = skillidtag;
+					var itemconsumetag = $dataSkills[skillid].meta.item_consume;
+					if (itemconsumetag){
+						var arrayResult = eval(itemconsumetag);
+						var itemconsumeid = arrayResult[0];
+						var itemdata = $dataItems[itemconsumeid];
+									var itemamount = $gameParty.numItems(itemdata);
+									
+							  changed = itemamount != this._j._last._bullet;
+							  if (changed) this._j._last._bullet = itemamount;
+					} 
+			}
+		  
+	  if (!changed && this._j._actor._equips[0]._itemId != this._j._last._equip0)
+	  {
+		  this._j._last._equip0 = this._j._actor._equips[0]._itemId;
+		 changed = true;
+	  }
+	  
+	  if (!changed && this._j._actor._equips[1]._itemId != this._j._last._equip1)
+	  {
+		  this._j._last._equip11 = this._j._actor._equips[1]._itemId;
+		  changed = true;
+	  }
+	  
+	  if (!changed && this._j._actor._equips[2]._itemId != this._j._last._equip2)
+	  {
+		  this._j._last._equip2 = this._j._actor._equips[2]._itemId;
+		  changed = true;
+	  }
+	  
+	  if (!changed && this._j._actor._equips[3]._itemId != this._j._last._equip3)
+	  {
+		  this._j._last._equip3 = this._j._actor._equips[3]._itemId;
+		  changed = true;
+	  }
+	  
+	  if (!changed && this._j._actor._equips[4]._itemId != this._j._last._equip4)
+	  {
+		  this._j._last._equip4 = this._j._actor._equips[4]._itemId;
+		  changed = true;
+	  }
+	  
+	  return changed;
   }
-  
-  
-  if (!changed && this._j._actor._equips[0]._itemId != this._j._last._equip0)
-  {
-	  this._j._last._equip0 = this._j._actor._equips[0]._itemId;
-	 changed = true;
-  }
-  
-  if (!changed && this._j._actor._equips[1]._itemId != this._j._last._equip1)
-  {
-	  this._j._last._equip11 = this._j._actor._equips[1]._itemId;
-	  changed = true;
-  }
-  
-  if (!changed && this._j._actor._equips[2]._itemId != this._j._last._equip2)
-  {
-	  this._j._last._equip2 = this._j._actor._equips[2]._itemId;
-	  changed = true;
-  }
-  
-  if (!changed && this._j._actor._equips[3]._itemId != this._j._last._equip3)
-  {
-	  this._j._last._equip3 = this._j._actor._equips[3]._itemId;
-	  changed = true;
-  }
-  
-  if (!changed && this._j._actor._equips[4]._itemId != this._j._last._equip4)
-  {
-	  this._j._last._equip4 = this._j._actor._equips[4]._itemId;
-	  changed = true;
-  }
-  
-  return changed;
 };
 
 /**
@@ -946,37 +919,36 @@ Sprite_ActorValue.prototype.createBitmap = function() {
       const nextLv = (this._j._actor.currentExp() - this._j._actor.currentLevelExp());
       value = curExp - nextLv;
       break;
-	case "bullet":
-	 bitmap.outlineWidth = 4;
-      bitmap.outlineColor = "rgba(64, 128, 64, 1.0)";
-	  if (this._j._actor._equips[0]._itemId != null && this._j._actor._equips[0]._itemId > 0)
-		{
-				var skillidtag = $dataWeapons[this._j._actor._equips[0]._itemId].meta.skillId;
-				var skillid = skillidtag;
-				var itemconsumetag = $dataSkills[skillid].meta.item_consume;
-
-				if (itemconsumetag){
-					var arrayResult = eval(itemconsumetag);
-					var itemconsumeid = arrayResult[0];
-
-					var itemdata = $dataItems[itemconsumeid];
-								var itemamount = $gameParty.numItems(itemdata);
-								
-						   value = itemamount;
-
-				}
-				else
-				{
-					value = 0;
-				}
-		}	
-		else
-		{
-			value = 0;
-		}
-		
-	  break;
+	  case "bullet":
+		 bitmap.outlineWidth = 4;
+		  bitmap.outlineColor = "rgba(64, 128, 64, 1.0)";
+		  if (this._j._actor._equips[0]._itemId != null && this._j._actor._equips[0]._itemId > 0)
+			{
+					var skillidtag = $dataWeapons[this._j._actor._equips[0]._itemId].meta.skillId;
+					var skillid = skillidtag;
+					var itemconsumetag = $dataSkills[skillid].meta.item_consume;
+					if (itemconsumetag){
+						var arrayResult = eval(itemconsumetag);
+						var itemconsumeid = arrayResult[0];
+						var itemdata = $dataItems[itemconsumeid];
+									var itemamount = $gameParty.numItems(itemdata);
+									
+							   value = itemamount;
+					}
+					else
+					{
+						value = 0;
+					}
+			}	
+			else
+			{
+				value = 0;
+			}
+			
+		  break;
+	  
   }
+  
   if (this._j._parameter == "mp" && !J.ABS.Metadata.ShowMPGaugeInHUD)
   {
 	  
@@ -993,7 +965,6 @@ Sprite_ActorValue.prototype.createBitmap = function() {
   {
 	  bitmap.drawText(value, 0, 0, bitmap.width, bitmap.height, "right");
   }
-  
   return bitmap;
 };
 
