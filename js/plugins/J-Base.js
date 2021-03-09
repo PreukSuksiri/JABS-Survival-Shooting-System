@@ -711,10 +711,12 @@ Game_Character.prototype.showHpBar = function() {
   }
 
   if (this.isInanimate()) showHpBar = false;
+  
   if (!J.ABS.Metadata.ShowMonsterHealthGauge)
   {
 	  showHpBar = false;
   }
+  
   return showHpBar;
 };
 
@@ -796,7 +798,6 @@ Game_Character.prototype.isDieHard = function() {
   }
   return invincible;
 };
-
 /**
  * Enemy call common event when dies.
  * `False` by default.
@@ -819,49 +820,6 @@ Game_Character.prototype.callCommonEventUponDead = function() {
   return parseInt(sightRadius);
 };
 
-/**
- * Enemy turn on self switch when dies.
- * `False` by default.
- * @returns {boolean}
- */
-Game_Character.prototype.selfSwitchUponDead = function() {
-  let result = "";
-  const referenceData = this.event();
-  if (referenceData.meta && referenceData.meta["selfSwitchDead"]) {
-    result = referenceData.meta["selfSwitchDead"] || result;
-  } else {
-    const structure = /<selfSwitchDead:[ ]?([0-9]*)>/i;
-    const notedata = referenceData.note.split(/[\r\n]+/);
-    notedata.forEach(note => {
-      if (note.match(structure)) {
-        result = RegExp.$1;
-      }
-    })
-  }
-  return result;
-};
-
-/**
- * Enemy turn on switch when dies.
- * `False` by default.
- * @returns {boolean}
- */
-Game_Character.prototype.switchUponDead = function() {
-  let result = 0;
-  const referenceData = this.event();
-  if (referenceData.meta && referenceData.meta["switchDead"]) {
-    result = referenceData.meta["switchDead"] || result;
-  } else {
-    const structure = /<switchDead:[ ]?([0-9]*)>/i;
-    const notedata = referenceData.note.split(/[\r\n]+/);
-    notedata.forEach(note => {
-      if (note.match(structure)) {
-        result = RegExp.$1;
-      }
-    })
-  }
-  return parseInt(result);
-};
 
 //#endregion Game_Character
 
@@ -1389,6 +1347,26 @@ class JABS_SkillData {
   };
 
   /**
+   * Gets whether or not this skill is a direct-targeting skill.
+   * @returns {boolean} True if it is a direct-targeting skill, false otherwise.
+   */
+  get direct() {
+    let isDirect = false;
+    if (this._meta && this._meta[J.Base.Notetags.DirectSkill]) {
+      isDirect = true;
+    } else {
+      const structure = /<direct>/i;
+      this._notes.forEach(note => {
+        if (note.match(structure)) {
+          isDirect = true;
+        }
+      });
+    }
+
+    return isDirect;
+  };
+
+  /**
    * Gets the number of bonus hits this skill grants.
    * @returns {number} The number of bonus hits.
    */
@@ -1597,7 +1575,7 @@ class JABS_SkillData {
    * @returns {number} The duration in frames (default = 60).
    */
   get duration() {
-    let duration = 60;
+    let duration = 0;
     if (this._meta && this._meta[J.Base.Notetags.Duration]) {
       duration = parseInt(this._meta[J.Base.Notetags.Duration]) || duration;
     } else {
