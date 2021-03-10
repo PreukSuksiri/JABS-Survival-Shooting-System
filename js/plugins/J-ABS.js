@@ -1929,6 +1929,7 @@ Game_Event.prototype.parseEnemyComments = function() {
   let isInvincible = false;
   let isInanimate = false;
   let customMoveSpeed = 0;
+  let noCollision = false;
 
   const currentPageIndex = this.findProperPageIndex();
   if (currentPageIndex > -1) {
@@ -1980,6 +1981,9 @@ Game_Event.prototype.parseEnemyComments = function() {
             break;
           case (/<inanimate>/i.test(comment)): // is inanimate?
             isInanimate = true;
+            break;
+          case (/<nocollision>/i.test(comment)): // no collision for bullet
+			noCollision = true;
             break;
         }
       }
@@ -5237,25 +5241,87 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
     actionEvents.forEach(action => {
       // if the duration of the action expires, remove it.
       action.countdownDuration();
-      if (action.isActionExpired()) {
-        this.cleanupAction(action);
-        return;
-      }
+	  
+	  
+	  
+	  var resultNoCollision = false;
 
-      // if there are no more hits left on this action, remove it.
-      const hits = action.getPiercingTimes();
-      if (hits <= 0) {
-        this.cleanupAction(action);
-        return;
-      }
+			  // iterate over all commands to construct the battler core data.
+			  action._actionSprite.list().forEach(command => {
+				if (action._actionSprite.matchesControlCode(command.code)) {
+				  const comment = command.parameters[0];
 
-      // if there is a delay between hits, count down on it.
-      const delay = action.getPiercingDelay();
-      if (delay > 0) {
-        action.modPiercingDelay();
-        return;
-      }
+				  if (comment.match(/<nocollision>/i)) {
+					
+					resultNoCollision = true;
+				  }
+				}
+			  });
+			  
+			  
+			  
+		
+	if (action.isActionExpired()) {
+		this.cleanupAction(action);
+		
+		if (resultNoCollision)
+		{
+			 // determine targets that this action collided with.
+		  const targets = this.getCollisionTargets(action);
+		  if (targets.length > 0) {
+			targets.forEach(target => {
+			  this.applyPrimaryBattleEffects(action, target);
+			});
 
+			// if the target can pierce enemies, adjust those values.
+			action.resetPiercingDelay();
+			action.modPiercingTimes();
+			
+			}
+		}
+		return;
+	  }
+
+	 // if there are no more hits left on this action, remove it.
+	  const hits = action.getPiercingTimes();
+	  if (hits <= 0) {
+		this.cleanupAction(action);
+		
+		
+		if (resultNoCollision)
+		{
+			 // determine targets that this action collided with.
+		  const targets = this.getCollisionTargets(action);
+		  if (targets.length > 0) {
+			targets.forEach(target => {
+			  this.applyPrimaryBattleEffects(action, target);
+			});
+
+			// if the target can pierce enemies, adjust those values.
+			action.resetPiercingDelay();
+			action.modPiercingTimes();
+			
+			}
+		}
+		
+		
+		return;
+	  }
+
+	  // if there is a delay between hits, count down on it.
+	  const delay = action.getPiercingDelay();
+	  if (delay > 0) {
+		action.modPiercingDelay();
+		return;
+	  }
+	  
+					if (resultNoCollision)
+					{
+						
+						return;
+					}
+					
+	
       // determine targets that this action collided with.
       const targets = this.getCollisionTargets(action);
       if (targets.length > 0) {
@@ -5266,6 +5332,8 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
         // if the target can pierce enemies, adjust those values.
         action.resetPiercingDelay();
         action.modPiercingTimes();
+		
+		
       }
     });
   };
@@ -6133,6 +6201,7 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
    * @returns {JABS_Battler[]} A collection of `JABS_Battler`s that this action hit.
    */
   getCollisionTargets(action) {
+	  
     const actionSprite = action.getActionSprite();
     const range = action.getRange();
     const shape = action.getShape();
@@ -10869,6 +10938,9 @@ class JABS_Action {
   constructor(baseSkill, teamId, cooldownFrames, range, proximity, shape, 
     gameAction, caster, actionId, duration, piercing, isRetaliation, direction,
     isBasicAttack, isSupportAction, isDirect) {
+		
+		//this._nocollision = true;//this._actionSprite.noCollision;
+		
       /**
        * The base skill object, in case needed for something.
        * @type {object}
