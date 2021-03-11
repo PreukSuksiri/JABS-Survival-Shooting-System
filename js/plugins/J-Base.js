@@ -1175,6 +1175,8 @@ Sprite_MapGauge.prototype.currentValue = function() {
               return this._battler.tp;
           case "time":
               return this._battler.currentExp() - this._battler.currentLevelExp();
+			  case "xp":
+              return this._battler.currentExp() - this._battler.currentLevelExp();
       }
   }
   return NaN;
@@ -1190,6 +1192,8 @@ Sprite_MapGauge.prototype.currentMaxValue = function() {
           case "tp":
               return this._battler.maxTp();
           case "time":
+              return this._battler.nextLevelExp() - this._battler.currentLevelExp();
+			  case "xp":
               return this._battler.nextLevelExp() - this._battler.currentLevelExp();
       }
   }

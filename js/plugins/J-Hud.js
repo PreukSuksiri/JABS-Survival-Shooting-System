@@ -255,7 +255,12 @@ Window_Hud.prototype.refresh = function() {
 Window_Hud.prototype.drawHud = function() {
   const actor = $gameParty.leader();
   this._actor = actor;
-  this.drawFace(this._actor.faceName(), this._actor.faceIndex(), 0, 0, 128, 72);
+  if (J.ABS.Metadata.ShowCharacterFaceInHUD)
+  {
+	 this.drawFace(this._actor.faceName(), this._actor.faceIndex(), 0, 0, 128, 72);
+   
+  }
+  
   this.drawHudGaugeSprites();
   this.drawHudNumberSprites();
   if (J.ABS.Metadata.ShowWeaponsAndBulletsInHUD)
@@ -352,27 +357,36 @@ Window_Hud.prototype.createBattlerSprite = function(key) {
  * A component of the Hud-drawing: draws the status gauges.
  */
 Window_Hud.prototype.drawHudGaugeSprites = function() {
- 
-  if (J.ABS.Metadata.ShowEXPGaugeInHUD)
-  {
-	  this.placeGaugeSprite("hp", 100, 0, 200, 24, 14);
-  }
-  else
-  {
-	  this.placeGaugeSprite("hp", -18, 72, 148, 22, 20);
-  }
+	
+
+	var gap = 0;
+	var faceheight = 0;
+	if (J.ABS.Metadata.ShowCharacterFaceInHUD)
+	{
+		faceheight = 70;
+	}
+	
+	
+ if (J.ABS.Metadata.ShowHPGaugeInHUD)
+ {
+	 this.placeGaugeSprite("hp", -18, 2+faceheight+gap, 148, 22, 20);
+	 gap += 22;
+ }
   
   if (J.ABS.Metadata.ShowMPGaugeInHUD)
   {
-	  this.placeGaugeSprite("mp", 100, 25, 200, 24, 14);
+	  this.placeGaugeSprite("mp", -18, 2+faceheight+gap, 148, 22, 20);
+	  gap += 22;
   }
   if (J.ABS.Metadata.ShowTPGaugeInHUD)
   {
-	  this.placeGaugeSprite("tp", 100, 44, 200, 20, 8);
+	  this.placeGaugeSprite("tp", -18, 2+faceheight+gap, 148, 12, 10);
+	  gap += 12;
   }
   if (J.ABS.Metadata.ShowEXPGaugeInHUD)
   {
-	  this.placeGaugeSprite("time", 0, 72, 128, 22, 20);
+	 this.placeGaugeSprite("time", 12, 2+faceheight+gap, 118, 12, 10);
+	 gap += 12;
   }
 };
 
@@ -380,28 +394,36 @@ Window_Hud.prototype.drawHudGaugeSprites = function() {
  * A component of the Hud-drawing: draws the numbers to match the gauges.
  */
 Window_Hud.prototype.drawHudNumberSprites = function() {
-   if (J.ABS.Metadata.ShowEXPGaugeInHUD)
-  {
-	  this.placeNumberSprite("hp", 90, -2, 5);
-  }
-  else
-  {
-	  this.placeNumberSprite("hp", -130, 76);
-  }
   
+  var gap = 0;
+  var faceheight = 0;
+	if (J.ABS.Metadata.ShowCharacterFaceInHUD)
+	{
+		faceheight = 70;
+	}
+  if (J.ABS.Metadata.ShowHPGaugeInHUD)
+  {
+	   this.placeNumberSprite("hp", -130, 4+faceheight+gap);
+	   gap += 22;
+  }
   
   if (J.ABS.Metadata.ShowMPGaugeInHUD)
   {
-	  this.placeNumberSprite("mp", 90, 26);
+	  this.placeNumberSprite("mp", -130, 4+faceheight+gap);
+	  gap += 22;
   }
+  /*
   if (J.ABS.Metadata.ShowTPGaugeInHUD)
   {
-	  this.placeNumberSprite("tp", 0, 44);
+	  this.placeNumberSprite("tp", -130, 4+faceheight+gap);
+	  gap += 16;
   }
   if (J.ABS.Metadata.ShowEXPGaugeInHUD)
   {
-	  this.placeNumberSprite("xp", -110, 76);
+	  this.placeNumberSprite("xp", -130, 4+faceheight+gap);
+	  gap += 16;
   }
+  */
 };
 
 /**
@@ -420,6 +442,7 @@ var getBulletRemaining = 300;
 const weaponkey = "actor%1-mainweapon-icon".format(this._actor.actorId(), getWeaponID);
 const armorkey = "actor%1-subweapon-icon".format(this._actor.actorId(), getArmorID);
 const bulletkey = "actor%1-mainweapon-bullet-number-icon".format(this._actor.actorId(), getBulletID);
+const subbulletkey = "actor%1-subweapon-bullet-number-icon".format(this._actor.actorId(), getBulletID);
 if (getWeaponID != null && getWeaponID != 0)
 {
 	var getWeaponIconID = $dataWeapons[getWeaponID].iconIndex;
@@ -464,6 +487,16 @@ if (getArmorID != null && getArmorID != 0)
 		  const asprite = this.createStateIconSprite(armorkey, getArmorIconID);
 		  asprite.move(130, -2+iconWidth + 4);
 		  asprite.show();
+		  
+		  if (this._hudSprites[subbulletkey] != null)	
+		{
+			this._hudSprites[subbulletkey].destroy();
+			delete this._hudSprites[subbulletkey];
+		}
+		
+		  const bsprite = this.createNumberSprite(subbulletkey, "subbullet", 5);
+		  bsprite.move(90, -2+iconWidth + 8);
+		  bsprite.show();
 }
 else
 {
@@ -832,9 +865,6 @@ Sprite_ActorValue.prototype.hasParameterChanged = function() {
       changed = this._j._actor.currentExp() != this._j._last._xp;
       if (changed) this._j._last._xp = this._j._actor.currentExp();
       return changed;
-	  case "xp": 
-      changed = this._j._actor.currentExp() != this._j._last._xp;
-      if (changed) this._j._last._xp = this._j._actor.currentExp();
 	case "bullet": 
 			if (this._j._actor._equips[0]._itemId != null && this._j._actor._equips[0]._itemId > 0)
 			{
@@ -850,6 +880,106 @@ Sprite_ActorValue.prototype.hasParameterChanged = function() {
 							  changed = itemamount != this._j._last._bullet;
 							  if (changed) this._j._last._bullet = itemamount;
 					} 
+					else
+					{
+						var weaponconsumetag = $dataSkills[skillid].meta.weapon_consume;
+						if (weaponconsumetag){
+							var arrayResult = eval(weaponconsumetag);
+							var weaponconsumeid = arrayResult[0];
+							var weapondata = $dataWeapons[weaponconsumeid];
+										var weaponamount = $gameParty.numItems(weapondata);
+										
+								  changed = weaponamount != this._j._last._bullet;
+								  if (changed) this._j._last._bullet = weaponamount;
+						} 
+						else
+						{
+							var armorconsumetag = $dataSkills[skillid].meta.armor_consume;
+							if (armorconsumetag){
+								var arrayResult = eval(armorconsumetag);
+								var armorconsumeid = arrayResult[0];
+								var armordata = $dataArmors[armorconsumeid];
+											var armoramount = $gameParty.numItems(armordata);
+											
+									  changed = armoramount != this._j._last._bullet;
+									  if (changed) this._j._last._bullet = armoramount;
+							} 
+						}
+					}
+			}
+		  
+	  if (!changed && this._j._actor._equips[0]._itemId != this._j._last._equip0)
+	  {
+		  this._j._last._equip0 = this._j._actor._equips[0]._itemId;
+		 changed = true;
+	  }
+	  
+	  if (!changed && this._j._actor._equips[1]._itemId != this._j._last._equip1)
+	  {
+		  this._j._last._equip11 = this._j._actor._equips[1]._itemId;
+		  changed = true;
+	  }
+	  
+	  if (!changed && this._j._actor._equips[2]._itemId != this._j._last._equip2)
+	  {
+		  this._j._last._equip2 = this._j._actor._equips[2]._itemId;
+		  changed = true;
+	  }
+	  
+	  if (!changed && this._j._actor._equips[3]._itemId != this._j._last._equip3)
+	  {
+		  this._j._last._equip3 = this._j._actor._equips[3]._itemId;
+		  changed = true;
+	  }
+	  
+	  if (!changed && this._j._actor._equips[4]._itemId != this._j._last._equip4)
+	  {
+		  this._j._last._equip4 = this._j._actor._equips[4]._itemId;
+		  changed = true;
+	  }
+	  
+	  return changed;
+	  case "subbullet": 
+			if (this._j._actor._equips[1]._itemId != null && this._j._actor._equips[1]._itemId > 0)
+			{
+					var skillidtag = $dataArmors[this._j._actor._equips[1]._itemId].meta.skillId;
+					var skillid = skillidtag;
+					var itemconsumetag = $dataSkills[skillid].meta.item_consume;
+					if (itemconsumetag){
+						var arrayResult = eval(itemconsumetag);
+						var itemconsumeid = arrayResult[0];
+						var itemdata = $dataItems[itemconsumeid];
+									var itemamount = $gameParty.numItems(itemdata);
+									
+							  changed = itemamount != this._j._last._subbullet;
+							  if (changed) this._j._last._subbullet = itemamount;
+					} 
+					else
+					{
+						var weaponconsumetag = $dataSkills[skillid].meta.weapon_consume;
+						if (weaponconsumetag){
+							var arrayResult = eval(weaponconsumetag);
+							var weaponconsumeid = arrayResult[0];
+							var weapondata = $dataWeapons[weaponconsumeid];
+										var weaponamount = $gameParty.numItems(weapondata);
+										
+								  changed = weaponamount != this._j._last._subbullet;
+								  if (changed) this._j._last._subbullet = weaponamount;
+						} 
+						else
+						{
+							var armorconsumetag = $dataSkills[skillid].meta.armor_consume;
+							if (armorconsumetag){
+								var arrayResult = eval(armorconsumetag);
+								var armorconsumeid = arrayResult[0];
+								var armordata = $dataArmors[armorconsumeid];
+											var armoramount = $gameParty.numItems(armordata);
+											
+									  changed = armoramount != this._j._last._subbullet;
+									  if (changed) this._j._last._subbullet = armoramount;
+							} 
+						}
+					}
 			}
 		  
 	  if (!changed && this._j._actor._equips[0]._itemId != this._j._last._equip0)
@@ -891,11 +1021,11 @@ Sprite_ActorValue.prototype.hasParameterChanged = function() {
  */
 Sprite_ActorValue.prototype.createBitmap = function() {
   let value = 0;
-  const width = (this._j._parameter == "bullet" ? this.bitmapWidth() /2 : this.bitmapWidth());
-  const height = (this._j._parameter == "bullet" ? this.fontSize() /2 : this.fontSize() + 4);
+  const width = (this._j._parameter == "bullet" || this._j._parameter == "subbullet" || this._j._parameter == "xp"|| this._j._parameter == "tp" ? this.bitmapWidth() /2 : this.bitmapWidth());
+  const height = (this._j._parameter == "bullet"|| this._j._parameter == "subbullet"|| this._j._parameter == "xp"|| this._j._parameter == "tp"  ? this.fontSize() /2 : this.fontSize() + 4);
   const bitmap = new Bitmap(width, height);
   bitmap.fontFace = this.fontFace();
-  bitmap.fontSize = (this._j._parameter == "bullet" ? this.fontSize() /2 : this.fontSize());
+  bitmap.fontSize = (this._j._parameter == "bullet" || this._j._parameter == "subbullet"|| this._j._parameter == "xp"|| this._j._parameter == "tp"  ? this.fontSize() /2 : this.fontSize());
   switch (this._j._parameter) {
     case "hp": 
       bitmap.outlineWidth = 4;
@@ -913,14 +1043,14 @@ Sprite_ActorValue.prototype.createBitmap = function() {
       value = Math.floor(this._j._actor.tp);
       break;
     case "xp":
-      bitmap.outlineWidth = 4;
+      bitmap.outlineWidth = 2;
       bitmap.outlineColor = "rgba(72, 72, 72, 1.0)";
       const curExp = (this._j._actor.nextLevelExp() - this._j._actor.currentLevelExp());
       const nextLv = (this._j._actor.currentExp() - this._j._actor.currentLevelExp());
       value = curExp - nextLv;
       break;
 	  case "bullet":
-		 bitmap.outlineWidth = 4;
+		 bitmap.outlineWidth = 2;
 		  bitmap.outlineColor = "rgba(64, 128, 64, 1.0)";
 		  if (this._j._actor._equips[0]._itemId != null && this._j._actor._equips[0]._itemId > 0)
 			{
@@ -937,16 +1067,92 @@ Sprite_ActorValue.prototype.createBitmap = function() {
 					}
 					else
 					{
-						value = 0;
+						var weaponconsumetag = $dataSkills[skillid].meta.weapon_consume;
+						if (weaponconsumetag){
+							var arrayResult = eval(weaponconsumetag);
+							var weaponconsumeid = arrayResult[0];
+							var weapondata = $dataWeapons[itemconsumeid];
+										var weaponamount = $gameParty.numItems(weapondata);
+										
+								   value = weaponamount;
+						}
+						else
+						{
+							var armorconsumetag = $dataSkills[skillid].meta.armor_consume;
+							if (armorconsumetag){
+								var arrayResult = eval(armorconsumetag);
+								var armorconsumeid = arrayResult[0];
+								var armordata = $dataArmors[itemconsumeid];
+											var armoramount = $gameParty.numItems(armordata);
+											
+									   value = armoramount;
+							}
+							else
+							{
+								value = -1;
+							}
+						}
 					}
 			}	
 			else
 			{
-				value = 0;
+				value = -1;
 			}
 			
 		  break;
-	  
+	  case "subbullet":
+		 bitmap.outlineWidth = 4;
+		  bitmap.outlineColor = "rgba(64, 128, 64, 1.0)";
+		  if (this._j._actor._equips[1]._itemId != null && this._j._actor._equips[1]._itemId > 0)
+			{
+					var skillidtag = $dataArmors[this._j._actor._equips[1]._itemId].meta.skillId;
+					var skillid = skillidtag;
+					
+					
+					var itemconsumetag = $dataSkills[skillid].meta.item_consume;
+					if (itemconsumetag){
+						var arrayResult = eval(itemconsumetag);
+						var itemconsumeid = arrayResult[0];
+						var itemdata = $dataItems[itemconsumeid];
+									var itemamount = $gameParty.numItems(itemdata);
+									
+							   value = itemamount;
+					}
+					else
+					{
+						var weaponconsumetag = $dataSkills[skillid].meta.weapon_consume;
+						if (weaponconsumetag){
+							var arrayResult = eval(weaponconsumetag);
+							var weaponconsumeid = arrayResult[0];
+							var weapondata = $dataWeapons[weaponconsumeid];
+										var weaponamount = $gameParty.numItems(weapondata);
+										
+								   value = weaponamount;
+						}
+						else
+						{
+							var armorconsumetag = $dataSkills[skillid].meta.armor_consume;
+							if (armorconsumetag){
+								var arrayResult = eval(armorconsumetag);
+								var armorconsumeid = arrayResult[0];
+								var armordata = $dataArmors[armorconsumeid];
+											var armoramount = $gameParty.numItems(armordata);
+											
+									   value = armoramount;
+							}
+							else
+							{
+								value = -1;
+							}
+						}
+					}
+			}	
+			else
+			{
+				value = -1;
+			}
+			
+		  break;
   }
   
   if (this._j._parameter == "mp" && !J.ABS.Metadata.ShowMPGaugeInHUD)
@@ -963,7 +1169,11 @@ Sprite_ActorValue.prototype.createBitmap = function() {
   }
   else
   {
-	  bitmap.drawText(value, 0, 0, bitmap.width, bitmap.height, "right");
+	  if (value >= 0)
+	  {
+		  bitmap.drawText(value, 0, 0, bitmap.width, bitmap.height, "right");
+	  }
+	  
   }
   return bitmap;
 };

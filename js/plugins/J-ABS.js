@@ -53,6 +53,16 @@
  * @param BreakSettings
  * @text --------------------------
  * @default ----------------------------------
+   * 
+ * @param Show Character Face in HUD
+ * @type boolean
+ * @desc Show Character Face in HUD
+ * @default true
+  * 
+ * @param Show HP Gauge in HUD
+ * @type boolean
+ * @desc Show HP Gauge in HUD
+ * @default true
  * 
  * @param Show MP Gauge in HUD
  * @type boolean
@@ -299,6 +309,8 @@ J.ABS.Metadata.AttackDecidedAnimationId = 1;//Number(J.ABS.PluginParameters['Att
 J.ABS.Metadata.SupportDecidedAnimationId = 1;//Number(J.ABS.PluginParameters['Support Decided Animation Id']);
 J.ABS.Metadata.ElementalIcons = J.ABS.Helpers.PluginManager.TranslateElementalIcons(J.ABS.PluginParameters['Elemental Icons']);
 J.ABS.Metadata.BulletBlockTerrainTag = Number(J.ABS.PluginParameters['Bullet Block Terrain Tag']);
+J.ABS.Metadata.ShowCharacterFaceInHUD = eval(J.ABS.PluginParameters['Show Character Face in HUD']);
+J.ABS.Metadata.ShowHPGaugeInHUD = eval(J.ABS.PluginParameters['Show HP Gauge in HUD']);
 J.ABS.Metadata.ShowMPGaugeInHUD = eval(J.ABS.PluginParameters['Show MP Gauge in HUD']);
 J.ABS.Metadata.ShowTPGaugeInHUD = eval(J.ABS.PluginParameters['Show TP Gauge in HUD']);
 J.ABS.Metadata.ShowEXPGaugeInHUD = eval(J.ABS.PluginParameters['Show EXP Gauge in HUD']);
@@ -1929,7 +1941,7 @@ Game_Event.prototype.parseEnemyComments = function() {
   let isInvincible = false;
   let isInanimate = false;
   let customMoveSpeed = 0;
-  let noCollision = false;
+  let delayedCollision = false;
 
   const currentPageIndex = this.findProperPageIndex();
   if (currentPageIndex > -1) {
@@ -1982,8 +1994,8 @@ Game_Event.prototype.parseEnemyComments = function() {
           case (/<inanimate>/i.test(comment)): // is inanimate?
             isInanimate = true;
             break;
-          case (/<nocollision>/i.test(comment)): // no collision for bullet
-			noCollision = true;
+          case (/<delayedCollision>/i.test(comment)): // no collision for bullet
+			delayedCollision = true;
             break;
         }
       }
@@ -3923,12 +3935,13 @@ Sprite_Character.prototype.configurePopup = function(popup) {
       sprite._xVariance = -40;
       sprite._yVariance = 20;
       sprite._duration += 180;
-      this.buildBasicPopSprite(sprite, popup);
+      
 	  if (popup.getDirectValue() > 0 && J.ABS.Metadata.ShowPopUpReward)
 	  {
-		  this.buildExperiencePopSprite(sprite, popup);
+		  this.buildBasicPopSprite(sprite, popup);
 		  if (popup.getIcon() >  0)
 		  {
+			  
 			 sprite.addIcon(popup.getIcon(),-80); 
 		  }
 	  }
@@ -3937,12 +3950,13 @@ Sprite_Character.prototype.configurePopup = function(popup) {
       sprite._xVariance = -40;
       sprite._yVariance = 40;
       sprite._duration += 180;
-      this.buildBasicPopSprite(sprite, popup);
+      
 	  if (popup.getDirectValue() > 0 && J.ABS.Metadata.ShowPopUpReward)
 	  {
-		  this.buildGoldPopSprite(sprite, popup);
+		  this.buildBasicPopSprite(sprite, popup);
 		  if (popup.getIcon() >  0)
 		  {
+			  
 			 sprite.addIcon(popup.getIcon(),-80); 
 		  }
 	  }
@@ -3951,12 +3965,13 @@ Sprite_Character.prototype.configurePopup = function(popup) {
       sprite._xVariance = -40;
       sprite._yVariance = 60;
       sprite._duration += 180;
-      this.buildBasicPopSprite(sprite, popup);
+      
 	   if (popup.getDirectValue() > 0 && J.ABS.Metadata.ShowPopUpReward)
 	  {
-		  this.buildSdpPopSprite(sprite, popup);
+		 this.buildBasicPopSprite(sprite, popup);  
 		  if (popup.getIcon() >  0)
 		  {
+			 
 			 sprite.addIcon(popup.getIcon(),-80); 
 		  }
 		  
@@ -3966,31 +3981,49 @@ Sprite_Character.prototype.configurePopup = function(popup) {
       sprite._xVariance = 60;
       sprite._yVariance = getRandomNumber(-30, 30);
       sprite._duration += 60;
-      this.buildBasicPopSprite(sprite, popup);
-	  if (popup.getIcon() >  0)
+      
+	  if (J.ABS.Metadata.ShowPopUpReward)
+	  {
+		   this.buildBasicPopSprite(sprite, popup);
+		   if (popup.getIcon() >  0)
 		  {
+			 
 			 sprite.addIcon(popup.getIcon(),-30); 
 		  }
+	  }
+	  
       break;
     case "levelup":
       sprite._xVariance = 0;
       sprite._yVariance = getRandomNumber(-30, 30);
       sprite._duration += 120;
-      this.buildBasicPopSprite(sprite, popup);
-	  if (popup.getIcon() >  0)
+      
+	  if (J.ABS.Metadata.ShowPopUpReward)
+	  {
+		  this.buildBasicPopSprite(sprite, popup);
+		  if (popup.getIcon() >  0)
 		  {
+			  
 			 sprite.addIcon(popup.getIcon(),-30); 
 		  }
+	  }
+	  
       break;
     case "skillLearn":
       sprite._xVariance = 0;
       sprite._yVariance = getRandomNumber(-30, 30);
       sprite._duration += 210;
       this.buildBasicPopSprite(sprite, popup);
-	  if (popup.getIcon() >  0)
+	  if (J.ABS.Metadata.ShowPopUpReward)
+	  {
+		    this.buildBasicPopSprite(sprite, popup);
+			if (popup.getIcon() >  0)
 		  {
+			 
 			 sprite.addIcon(popup.getIcon(),-30); 
 		  }
+	  }
+	  
       break;
   }
 
@@ -5244,16 +5277,16 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 	  
 	  
 	  
-	  var resultNoCollision = false;
+	  var resultDelayedCollision = false;
 
 			  // iterate over all commands to construct the battler core data.
 			  action._actionSprite.list().forEach(command => {
 				if (action._actionSprite.matchesControlCode(command.code)) {
 				  const comment = command.parameters[0];
 
-				  if (comment.match(/<nocollision>/i)) {
+				  if (comment.match(/<delayedCollision>/i)) {
 					
-					resultNoCollision = true;
+					resultDelayedCollision = true;
 				  }
 				}
 			  });
@@ -5264,7 +5297,7 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 	if (action.isActionExpired()) {
 		this.cleanupAction(action);
 		
-		if (resultNoCollision)
+		if (resultDelayedCollision)
 		{
 			 // determine targets that this action collided with.
 		  const targets = this.getCollisionTargets(action);
@@ -5273,9 +5306,6 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 			  this.applyPrimaryBattleEffects(action, target);
 			});
 
-			// if the target can pierce enemies, adjust those values.
-			action.resetPiercingDelay();
-			action.modPiercingTimes();
 			
 			}
 		}
@@ -5288,7 +5318,7 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 		this.cleanupAction(action);
 		
 		
-		if (resultNoCollision)
+		if (resultDelayedCollision)
 		{
 			 // determine targets that this action collided with.
 		  const targets = this.getCollisionTargets(action);
@@ -5315,7 +5345,7 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 		return;
 	  }
 	  
-					if (resultNoCollision)
+					if (resultDelayedCollision)
 					{
 						
 						return;
@@ -10939,7 +10969,6 @@ class JABS_Action {
     gameAction, caster, actionId, duration, piercing, isRetaliation, direction,
     isBasicAttack, isSupportAction, isDirect) {
 		
-		//this._nocollision = true;//this._actionSprite.noCollision;
 		
       /**
        * The base skill object, in case needed for something.
