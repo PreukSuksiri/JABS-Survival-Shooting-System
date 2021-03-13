@@ -75,6 +75,10 @@ Game_Event.prototype.setupPage = function() {
 //==============================
 Game_Event.prototype.check_event_text = function() {
 	this._need_clear_text = true
+	if (this == null || this.event() == null)
+	{
+		return;
+	}
 	if (!this._erased && this.page()) {
 		this.list().forEach((l) => {
 			if (l.code === 108) {

@@ -4,11 +4,12 @@
  * @plugindesc 
  * Welcome to JABS,
  * J's Action Battle System!
- * @author JE
- * @url https://github.com/je-can-code/rmmz
+ * @author JE & Mysticphoenix
+ * @url https://github.com/PreukSuksiri/JABS-Survival-Shooting-System
  * @help
  * It would be overwhelming to write everything here.
  * Do visit the URL attached to this plugin for documentation.
+ * Original system : https://github.com/je-can-code/rmmz
  * 
  * @param BreakHead
  * @text --------------------------
@@ -40,20 +41,12 @@
  * @type number
  * @desc The default id of the animation for battlers when none is defined.
  * @default 1
- * 
- * @param BreakSettings
- * @text --------------------------
- * @default ----------------------------------
- * 
- * @param Elemental Icons
- * @type struct<ElementalIconStruct>[]
- * @desc The collection of element ids and their icon indices.
- * @default []
- * 
- * @param BreakSettings
- * @text --------------------------
- * @default ----------------------------------
-   * 
+ *
+    * @param Bullet Block Terrain Tag
+ * @type number
+ * @desc The terrain tag that block a bullet
+ * @default 1
+ *
  * @param Show Character Face in HUD
  * @type boolean
  * @desc Show Character Face in HUD
@@ -307,7 +300,7 @@ J.ABS.Metadata.DefaultGuardSkillTypeId = 2;//Number(J.ABS.PluginParameters['Defa
 J.ABS.Metadata.DefaultToolCooldownTime = 300;//Number(J.ABS.PluginParameters['Default Tool Cooldown Time']);
 J.ABS.Metadata.AttackDecidedAnimationId = 1;//Number(J.ABS.PluginParameters['Attack Decided Animation Id']);
 J.ABS.Metadata.SupportDecidedAnimationId = 1;//Number(J.ABS.PluginParameters['Support Decided Animation Id']);
-J.ABS.Metadata.ElementalIcons = J.ABS.Helpers.PluginManager.TranslateElementalIcons(J.ABS.PluginParameters['Elemental Icons']);
+J.ABS.Metadata.ElementalIcons = J.ABS.Helpers.PluginManager.TranslateElementalIcons('[]');
 J.ABS.Metadata.BulletBlockTerrainTag = Number(J.ABS.PluginParameters['Bullet Block Terrain Tag']);
 J.ABS.Metadata.ShowCharacterFaceInHUD = eval(J.ABS.PluginParameters['Show Character Face in HUD']);
 J.ABS.Metadata.ShowHPGaugeInHUD = eval(J.ABS.PluginParameters['Show HP Gauge in HUD']);
@@ -321,6 +314,27 @@ J.ABS.Metadata.ShowMonsterEmotionBalloon = eval(J.ABS.PluginParameters['Show mon
 J.ABS.Metadata.ShowMonsterHealthGauge = eval(J.ABS.PluginParameters['Show monster health gauge']);
 J.ABS.Metadata.ShowPopupDamage = eval(J.ABS.PluginParameters['Show pop up damage']);
 
+J.ABS.Metadata.CalculateBulletBlock = function(_x,_y,_direction){
+	var result = false;
+
+	if (_direction == 2)
+	{
+		result = ($gameMap.terrainTag(_x, _y) == J.ABS.Metadata.BulletBlockTerrainTag || $gameMap.terrainTag(_x, _y+1) == J.ABS.Metadata.BulletBlockTerrainTag);
+	}
+	else if (_direction == 4)
+	{
+		result = ($gameMap.terrainTag(_x, _y) == J.ABS.Metadata.BulletBlockTerrainTag || $gameMap.terrainTag(_x-1, _y) == J.ABS.Metadata.BulletBlockTerrainTag);
+	}
+	else if (_direction == 6)
+	{
+		result = ($gameMap.terrainTag(_x, _y) == J.ABS.Metadata.BulletBlockTerrainTag || $gameMap.terrainTag(_x+1, _y) == J.ABS.Metadata.BulletBlockTerrainTag);
+	}
+	else if (_direction == 8)
+	{
+		result = ($gameMap.terrainTag(_x, _y) == J.ABS.Metadata.BulletBlockTerrainTag || $gameMap.terrainTag(_x, _y-1) == J.ABS.Metadata.BulletBlockTerrainTag);
+	}
+	return result;
+};
 /**
  * The various default values across the engine. Often configurable.
  */
@@ -2306,6 +2320,7 @@ Game_Map.prototype.update = function(sceneActive) {
 	}
 	catch(ex){
 		console.log('error at Game_Map.prototype.update');
+		console.log(ex);
 	}
 };
 
@@ -5272,99 +5287,124 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
   updateActions() {
     const actionEvents = this.actionEvents;
     actionEvents.forEach(action => {
-      // if the duration of the action expires, remove it.
-      action.countdownDuration();
-	  
-	  
-	  
-	  var resultDelayedCollision = false;
+		if (action != null)
+		  {
+			  if(action._actionSprite != null)
+			  {
+				// if the duration of the action expires, remove it.
+				  action.countdownDuration();
+				  
+				  
+				  
+				  var resultDelayedCollision = false;
 
-			  // iterate over all commands to construct the battler core data.
-			  action._actionSprite.list().forEach(command => {
-				if (action._actionSprite.matchesControlCode(command.code)) {
-				  const comment = command.parameters[0];
+						  // iterate over all commands to construct the battler core data.
+							try
+							{
+								if (action._actionSprite.list() != null)
+							  {
+								  action._actionSprite.list().forEach(command => {
+									if (action._actionSprite.matchesControlCode(command.code)) {
+									  const comment = command.parameters[0];
 
-				  if (comment.match(/<delayedCollision>/i)) {
+									  if (comment.match(/<delayedCollision>/i)) {
+										
+										resultDelayedCollision = true;
+									  }
+									}
+								  });
+							  }
+							}
+							catch
+							{
+								this.cleanupAction(action);
+							}
+						  
+						  
+						 
+						  
+						  
+						  
 					
-					resultDelayedCollision = true;
-				  }
-				}
-			  });
-			  
-			  
-			  
-		
-	if (action.isActionExpired()) {
-		this.cleanupAction(action);
-		
-		if (resultDelayedCollision)
-		{
-			 // determine targets that this action collided with.
-		  const targets = this.getCollisionTargets(action);
-		  if (targets.length > 0) {
-			targets.forEach(target => {
-			  this.applyPrimaryBattleEffects(action, target);
-			});
-
-			
-			}
-		}
-		return;
-	  }
-
-	 // if there are no more hits left on this action, remove it.
-	  const hits = action.getPiercingTimes();
-	  if (hits <= 0) {
-		this.cleanupAction(action);
-		
-		
-		if (resultDelayedCollision)
-		{
-			 // determine targets that this action collided with.
-		  const targets = this.getCollisionTargets(action);
-		  if (targets.length > 0) {
-			targets.forEach(target => {
-			  this.applyPrimaryBattleEffects(action, target);
-			});
-
-			// if the target can pierce enemies, adjust those values.
-			action.resetPiercingDelay();
-			action.modPiercingTimes();
-			
-			}
-		}
-		
-		
-		return;
-	  }
-
-	  // if there is a delay between hits, count down on it.
-	  const delay = action.getPiercingDelay();
-	  if (delay > 0) {
-		action.modPiercingDelay();
-		return;
-	  }
-	  
+				if (action.isActionExpired()) {
+					this.cleanupAction(action);
+					
 					if (resultDelayedCollision)
 					{
+						 // determine targets that this action collided with.
+					  const targets = this.getCollisionTargets(action);
+					  if (targets.length > 0) {
+						targets.forEach(target => {
+						  this.applyPrimaryBattleEffects(action, target);
+						});
+
 						
-						return;
+						}
+					}
+					return;
+				  }
+
+				 // if there are no more hits left on this action, remove it.
+				  const hits = action.getPiercingTimes();
+				  if (hits <= 0) {
+					this.cleanupAction(action);
+					
+					
+					if (resultDelayedCollision)
+					{
+						 // determine targets that this action collided with.
+					  const targets = this.getCollisionTargets(action);
+					  if (targets.length > 0) {
+						targets.forEach(target => {
+						  this.applyPrimaryBattleEffects(action, target);
+						});
+
+						// if the target can pierce enemies, adjust those values.
+						action.resetPiercingDelay();
+						action.modPiercingTimes();
+						
+						}
 					}
 					
-	
-      // determine targets that this action collided with.
-      const targets = this.getCollisionTargets(action);
-      if (targets.length > 0) {
-        targets.forEach(target => {
-          this.applyPrimaryBattleEffects(action, target);
-        });
+					
+					return;
+				  }
 
-        // if the target can pierce enemies, adjust those values.
-        action.resetPiercingDelay();
-        action.modPiercingTimes();
-		
-		
-      }
+				  // if there is a delay between hits, count down on it.
+				  const delay = action.getPiercingDelay();
+				  if (delay > 0) {
+					action.modPiercingDelay();
+					return;
+				  }
+				  
+								if (resultDelayedCollision)
+								{
+									
+									return;
+								}
+								
+				
+				  // determine targets that this action collided with.
+				  const targets = this.getCollisionTargets(action);
+				  if (targets.length > 0) {
+					targets.forEach(target => {
+					  this.applyPrimaryBattleEffects(action, target);
+					});
+
+					// if the target can pierce enemies, adjust those values.
+					action.resetPiercingDelay();
+					action.modPiercingTimes();
+					
+					
+				  }  
+			  }
+			  else
+			  {
+				  this.cleanupAction(action);
+			  }
+		  }
+			  
+      
     });
   };
 
@@ -9631,6 +9671,11 @@ JABS_Battler.prototype.isBaseCooldownReady = function(cooldownKey) {
  * @param {string} cooldownKey The key of this cooldown.
  */
 JABS_Battler.prototype.countdownComboCooldown = function(cooldownKey) {
+	//Mysticphoenix EDIT 13-MAR-2021
+	if (!this._cooldowns[cooldownKey].comboReady)
+	{
+		return;
+	}		
   if (!this._cooldowns[cooldownKey].comboNextActionId) return;
 
   if (this._cooldowns[cooldownKey].comboReady) {
@@ -9662,6 +9707,11 @@ JABS_Battler.prototype.isComboCooldownReady = function(cooldownKey) {
  * @param {number} duration The duration of this cooldown.
  */
 JABS_Battler.prototype.modCooldownCounter = function(cooldownKey, duration) {
+	//Mysticphoenix Edited 04-MAR-2021
+	if (!this._cooldowns[cooldownKey].ready)
+	  {
+		  return;
+	  }
   this._cooldowns[cooldownKey].frames += duration;
   if (this._cooldowns[cooldownKey].frames > 0) {
     this._cooldowns[cooldownKey].ready = false;
@@ -9710,6 +9760,11 @@ JABS_Battler.prototype.resetComboData = function(cooldownKey) {
  * @param {number} frames The number of frames until this combo action is ready.
  */
 JABS_Battler.prototype.setComboFrames = function(cooldownKey, frames) {
+	//Mysticphoenix EDIT 13-MAR-2021
+	if (!this._cooldowns[cooldownKey].comboReady)
+	{
+		return;
+	}		
   this._cooldowns[cooldownKey].comboFrames = frames;
   if (this._cooldowns[cooldownKey].comboFrames > 0) {
     this._cooldowns[cooldownKey].comboReady = false;
