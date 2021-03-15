@@ -1952,6 +1952,7 @@ Game_Event.prototype.parseEnemyComments = function() {
   let alertDuration = 0;
   let canIdle = true;
   let showHpBar = true;
+   let bossHpBar = true;
   let isInvincible = false;
   let isInanimate = false;
   let customMoveSpeed = 0;
@@ -2002,6 +2003,9 @@ Game_Event.prototype.parseEnemyComments = function() {
           case (/<noHpBar>/i.test(comment)): // show hp bar?
             showHpBar = false;
             break;
+			case (/<bossHpBar>/i.test(comment)): // show boss hp bar?
+            bossHpBar = true;
+            break;
           case (/<invincible>/i.test(comment)): // is invincible?
             isInvincible = true;
             break;
@@ -2029,6 +2033,7 @@ Game_Event.prototype.parseEnemyComments = function() {
       alertDuration,
       canIdle,
       showHpBar,
+	   bossHpBar,
       isInvincible,
       isInanimate);
     this.setBattlerCoreData(battlerCoreData);
@@ -3556,7 +3561,8 @@ Sprite_Character.prototype.setCharacter = function(character) {
   J.ABS.Aliased.Sprite_Character.setCharacter.call(this, character);
   // if this is a battler, configure the visual components of the battler.
   if (this._character.hasJabsBattler()) {
-    this.setupMapSprite();
+	  const mapBattler = this._character.getMapBattler();
+    this.setupMapSprite(mapBattler);
   }
 
   if (this.isLoot()) {
@@ -3599,9 +3605,9 @@ Sprite_Character.prototype.setTileBitmap = function() {
 /**
  * Sets up this character's sprite for activities on the map.
  */
-Sprite_Character.prototype.setupMapSprite = function() {
+Sprite_Character.prototype.setupMapSprite = function(mapBattler) {
   this.setupStateOverlay();
-  this.setupHpGauge();
+  this.setupHpGauge(mapBattler);
 };
 
 /**
@@ -3619,10 +3625,20 @@ Sprite_Character.prototype.setupStateOverlay = function() {
 /**
  * Sets up this character's hp gauge, to show the hp bar as-needed.
  */
-Sprite_Character.prototype.setupHpGauge = function() {
+Sprite_Character.prototype.setupHpGauge = function(mapBattler) {
   // initializes a gauge for this battler to monitor their hp.
+
   const battler = this.getBattler();
-  this._hpGauge = this.createSpriteGauge();
+  console.log(mapBattler);
+  if (mapBattler.bossHpBar())
+  {
+	  this._hpGauge = this.createBossSpriteGauge();
+  }
+  else
+  {
+	  this._hpGauge = this.createSpriteGauge();
+  }
+  
   if (battler) {
     this._hpGauge.setup(battler, "hp");
   }
@@ -3633,9 +3649,29 @@ Sprite_Character.prototype.setupHpGauge = function() {
  * Creates an on-the-map HP gauge for this battler.
  */
 Sprite_Character.prototype.createSpriteGauge = function() {
+	
   const hpGauge = new Sprite_MapGauge();
+  const battler = this.getBattler();
   hpGauge.x = this.x  - (hpGauge.width / 1.5);
-  hpGauge.y = this.y - 72;
+	hpGauge.y = this.y - 72;
+ 
+  
+  return hpGauge;
+};
+
+/**
+ * Creates an on-the-map HP gauge for this battler.
+ */
+Sprite_Character.prototype.createBossSpriteGauge = function() {
+	
+  const hpGauge = new Sprite_MapGauge();
+  const battler = this.getBattler();
+ hpGauge.width = hpGauge.width * 10;
+ hpGauge.height = hpGauge.height * 3.2;
+  
+ hpGauge.x = this.x  - (hpGauge.width / 1.5);
+	hpGauge.y = this.y - 72;
+  
   return hpGauge;
 };
 
@@ -3734,7 +3770,8 @@ Sprite_Character.prototype.updateGauges = function() {
   if (mapBattler) {
     if (this.canUpdate() && mapBattler.showHpBar()) {
       if (!this._hpGauge) {
-        this.setupMapSprite();
+        this.setupMapSprite(mapBattler);
+		
         this._hpGauge.move(0 - (this._hpGauge.width / 1.5), 0 - 72);
       }
       this._hpGauge._battler = this.getBattler();
@@ -5291,13 +5328,34 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 		  {
 			  if(action._actionSprite != null)
 			  {
+				  
+				  
 				// if the duration of the action expires, remove it.
 				  action.countdownDuration();
 				  
 				  
 				  
 				  var resultDelayedCollision = false;
-
+				  var animationOnCollision = -1;
+					var animationOnTimeout = -1;
+					var customCollisionShape = "";
+					var customCollisionRange = -1;
+					var collideOnTimeout = false;
+					var forcedCollision = false;
+					
+					try
+					{
+						if (action._actionSprite.forcedCollision != null && action._actionSprite.forcedCollision == true)
+						{
+							forcedCollision = true;
+						}
+					}
+					catch(ex)
+					{
+						console.log(ex);
+					}
+					
+					
 						  // iterate over all commands to construct the battler core data.
 							try
 							{
@@ -5310,6 +5368,45 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 									  if (comment.match(/<delayedCollision>/i)) {
 										
 										resultDelayedCollision = true;
+									  }
+									  
+									   if (comment.match(/<collideOnTimeout>/i)) {
+										
+										collideOnTimeout = true;
+									  }
+									  
+									  if (comment.match(/<destroyWhenExamine'>/i)) {
+										
+										if (Input.isPressed("ok")
+											&& ($gamePlayer.direction() == 2 && action._actionSprite._y == $gamePlayer.y+1 && action._actionSprite._x == $gamePlayer.x
+												|| $gamePlayer.direction() == 4 && action._actionSprite._x == $gamePlayer.x-1 && action._actionSprite._y == $gamePlayer.y
+												|| $gamePlayer.direction() == 6 && action._actionSprite._x == $gamePlayer.x+1 && action._actionSprite._y == $gamePlayer.y
+												|| $gamePlayer.direction() == 8 && action._actionSprite._y == $gamePlayer.y-1 && action._actionSprite._x == $gamePlayer.x)
+										)
+										  {
+											  this.cleanupAction(action);
+										  }
+									  }
+									  
+									  
+									if (comment.indexOf('animationOnCollision') >= 0) {
+										animationOnCollision = Number(comment.split(':')[1]);
+										
+									  }
+									  
+									   if (comment.indexOf('animationOnTimeout') >= 0) {
+										animationOnTimeout = Number(comment.split(':')[1]);
+										
+									  }
+									  
+									  if (comment.indexOf('customCollisionShape') >= 0) {
+										customCollisionShape = String(comment.split(':')[1]);
+										
+									  }
+									  
+									  if (comment.indexOf('customCollisionRange') >= 0) {
+										customCollisionRange = Number(comment.split(':')[1]);
+										
 									  }
 									}
 								  });
@@ -5326,21 +5423,48 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 						  
 						  
 					
-				if (action.isActionExpired()) {
-					this.cleanupAction(action);
+				if (action.isActionExpired() || forcedCollision) {
 					
-					if (resultDelayedCollision)
+					if (animationOnTimeout > 0)
+						{
+							$gameTemp.requestAnimation([action._actionSprite], animationOnTimeout);
+						}
+					
+					if (animationOnCollision > 0)
+							{
+								$gameTemp.requestAnimation([action._actionSprite], animationOnCollision);
+							}
+					if (resultDelayedCollision || collideOnTimeout)
 					{
+						if (customCollisionShape != "")	
+							{
+								action.setShape(customCollisionShape);
+							}
+							
+							if (customCollisionRange >= 0)
+							{
+								action.setRange(customCollisionRange);
+							}
+							
+						
 						 // determine targets that this action collided with.
-					  const targets = this.getCollisionTargets(action);
+					  var targets = this.getCollisionTargets(action);
 					  if (targets.length > 0) {
-						targets.forEach(target => {
-						  this.applyPrimaryBattleEffects(action, target);
-						});
+						  
+							
+							
+							targets.forEach(target => {
+							  this.applyPrimaryBattleEffects(action, target);
+							});
+						
 
 						
 						}
+						
 					}
+					
+					this.cleanupAction(action);
+					
 					return;
 				  }
 
@@ -5353,11 +5477,31 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 					if (resultDelayedCollision)
 					{
 						 // determine targets that this action collided with.
-					  const targets = this.getCollisionTargets(action);
+					  var targets = this.getCollisionTargets(action);
 					  if (targets.length > 0) {
-						targets.forEach(target => {
-						  this.applyPrimaryBattleEffects(action, target);
-						});
+						 
+						  if (animationOnCollision > 0)
+							{
+								$gameTemp.requestAnimation([action._actionSprite], animationOnCollision);
+							}
+						  
+						if (customCollisionShape != "")	
+							{
+								action.setShape(customCollisionShape);
+							}
+							
+							if (customCollisionRange >= 0)
+							{
+								action.setRange(customCollisionRange);
+							}
+							
+							 targets = this.getCollisionTargets(action);
+							 
+							  if (targets.length > 0) {
+								  targets.forEach(target => {
+									  this.applyPrimaryBattleEffects(action, target);
+									});
+							  }
 
 						// if the target can pierce enemies, adjust those values.
 						action.resetPiercingDelay();
@@ -5385,11 +5529,32 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 								
 				
 				  // determine targets that this action collided with.
-				  const targets = this.getCollisionTargets(action);
+				  var targets = this.getCollisionTargets(action);
 				  if (targets.length > 0) {
-					targets.forEach(target => {
-					  this.applyPrimaryBattleEffects(action, target);
-					});
+					   
+					if (animationOnCollision > 0)
+							{
+								$gameTemp.requestAnimation([action._actionSprite], animationOnCollision);
+							}
+							
+					if (customCollisionShape != "")	
+							{
+								action.setShape(customCollisionShape);
+							}
+							
+							if (customCollisionRange >= 0)
+							{
+								action.setRange(customCollisionRange);
+							}
+							
+							 targets = this.getCollisionTargets(action);
+							 
+							  if (targets.length > 0) {
+								  targets.forEach(target => {
+									  this.applyPrimaryBattleEffects(action, target);
+									});
+							  }
+							  
 
 					// if the target can pierce enemies, adjust those values.
 					action.resetPiercingDelay();
@@ -6845,6 +7010,10 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
    * @param {JABS_Battler} player The player.
    */
   createLevelUpLog(player) {
+	   if (J.TextLog == null)
+	{
+		return;
+	}
     if (!J.TextLog.Metadata.Enabled || !J.TextLog.Metadata.Active) return;
 
     const leaderData = player.getReferenceData();
@@ -6903,6 +7072,10 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
    * @param {JABS_Battler} character The player's `JABS_Battler`.
    */
   createSkillLearnLog(skill, player) {
+	   if (J.TextLog == null)
+	{
+		return;
+	}
     if (!J.TextLog.Metadata.Enabled || !J.TextLog.Metadata.Active) return;
 
     const leaderData = player.getReferenceData();
@@ -7514,6 +7687,7 @@ JABS_Battler.prototype.initCoreData = function(battlerCoreData) {
    * to be collided with by map actions.
    * @type {boolean}
    */
+   this._bossHpBar = false;
   this._invincible = battlerCoreData.isInvincible();
 
   /**
@@ -7922,6 +8096,7 @@ JABS_Battler.createPlayer = function() {
     0,                  // alert duration
     false,              // can move idly
     false,              // show hp bar
+	false,              // boss hp bar
     false,              // is invincible
     false);             // is inanimate
   const player = new JABS_Battler($gamePlayer, battler, coreBattlerData);
@@ -9341,6 +9516,9 @@ JABS_Battler.prototype.canIdle = function() {
 JABS_Battler.prototype.showHpBar = function() {
   return this._showHpBar;
 };
+JABS_Battler.prototype.bossHpBar = function() {
+  return this._bossHpBar;
+};
 
 /**
  * Gets whether or not this battler is in an `alerted` state.
@@ -10236,6 +10414,10 @@ JABS_Battler.prototype.applyToolForAllOpponents = function(toolId) {
  */
 JABS_Battler.prototype.createToolLog = function(item) {
   // if not enabled, skip this.
+  if (J.TextLog == null)
+  {
+	  return;
+  }
   if (!J.TextLog.Metadata.Active) return;
 
   const battleMessage = `${this.getReferenceData().name} used the ${item.name}.`;
@@ -11266,7 +11448,11 @@ class JABS_Action {
    * @returns {number} The range of this action.
    */
   getRange = () => this._range;
-
+  
+setRange = (rangeValue) => {
+	this._range = rangeValue;
+	
+};
   /**
    * Gets the proximity to the target in order to use this `JABS_Action`.
    * @returns {number} The proximity required for this action.
@@ -11277,7 +11463,11 @@ class JABS_Action {
    * The shape of the hitbox for this `JABS_Action`.
    */
   getShape = () => this._shape;
-
+  
+setShape = (shapeName) => {
+	this._shape = shapeName;
+	
+};
   /**
    * The base game action this `JABS_Action` is based on.
    * @returns {Game_Action} The base game action for this action.
@@ -11645,12 +11835,13 @@ JABS_BattlerCoreData.prototype.constructor = JABS_BattlerCoreData;
  * @param {number} alertDuration The duration in frames of how long to remain alerted.
  * @param {boolean} canIdle Whether or not this battler can idle.
  * @param {boolean} showHpBar Whether or not to show the hp bar.
+  * @param {boolean} bossHpBar Whether or not to show the boss bar on the top of the screen.
  * @param {boolean} isInvincible Whether or not this battler is invincible.
  * @param {boolean} isInanimate Whether or not this battler is inanimate.
  */
 JABS_BattlerCoreData.prototype.initialize = function(
   battlerId, teamId, battlerAI, sightRange, alertedSightBoost, pursuitRange, 
-  alertedPursuitBoost, alertDuration, canIdle, showHpBar, isInvincible, isInanimate
+  alertedPursuitBoost, alertDuration, canIdle, showHpBar, bossHpBar, isInvincible, isInanimate
 ) {
   /**
    * The id of the enemy that this battler represents.
@@ -11711,7 +11902,7 @@ JABS_BattlerCoreData.prototype.initialize = function(
    * @type {boolean} True if the battler's hp bar should show, false otherwise.
    */
   this._showHpBar = showHpBar;
-
+	this._bossHPBar = bossHpBar;
   /**
    * Whether or not this battler is invincible.
    * 
@@ -11807,6 +11998,10 @@ JABS_BattlerCoreData.prototype.canIdle = function() {
  */
 JABS_BattlerCoreData.prototype.showHpBar = function() {
   return this._showHpBar;
+};
+
+JABS_BattlerCoreData.prototype.bossHpBar = function() {
+  return this._bossHpBar;
 };
 
 /**

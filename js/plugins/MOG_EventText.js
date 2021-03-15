@@ -25,6 +25,9 @@
  * It is important to note that the space is required between the ":" and text.
  *
  *  event_text : TEXT
+  *  event_text_x_axis : Number
+  * event_text_y_axis : Number
+  * event_text_color : String     (example: #ffffff)
  *
  * Example:
  *
@@ -55,6 +58,9 @@ var _alias_mog_eventext_cbase_initMembers = Game_CharacterBase.prototype.initMem
 Game_CharacterBase.prototype.initMembers = function() {
 	_alias_mog_eventext_cbase_initMembers.call(this);
 	this._char_text = [false, ""];
+	this._x_axis_modifier = 0;
+	this._y_axis_modifier = 0;
+	this._char_text_color = "#ffffff";
 };
 
 //=============================================================================
@@ -87,6 +93,20 @@ Game_Event.prototype.check_event_text = function() {
 					this._char_text = [true, String(comment[1])];
 					this._need_clear_text = false;
 				}
+				
+				if (comment[0].toLowerCase() == "event_text_x_axis") {
+					this._x_axis_modifier = Number(comment[1]);
+					
+				}
+				
+				if (comment[0].toLowerCase() == "event_text_y_axis") {
+					this._y_axis_modifier = Number(comment[1]);
+				}
+				
+				if (comment[0].toLowerCase() == "event_text_color") {
+					this._char_text_color = String(comment[1]);
+				}
+				
 			}
 		}, this);
 	};
@@ -171,8 +191,8 @@ Sprite_CharText.prototype.update = function() {
 	
 	if (!this._char_text) return;
 
-	this._char_text.x = this.textX_axis();
-	this._char_text.y = this.textY_axis();
+	this._char_text.x = this.textX_axis() + this.character()._x_axis_modifier;
+	this._char_text.y = this.textY_axis() + this.character()._y_axis_modifier;
 };
 
 //==============================
@@ -184,11 +204,12 @@ Sprite_CharText.prototype.create_char_text = function() {
 	}
 
 	if (this.character()._char_text[1] === "") return;
-
+	
 	this._char_text = new Sprite(new Bitmap(140,32));
 	this._char_text.anchor.x = 0.5;
 	this._char_text.y = -(this.sprite_char.patternHeight());
 	this._char_text.bitmap.fontSize = Moghunter.charText_Size;
+	this._char_text.bitmap.textColor = this.character()._char_text_color ?? "#ffffff";
 	this.addChild(this._char_text);
 };
 
@@ -202,7 +223,11 @@ Sprite_CharText.prototype.refresh_char_text = function() {
 
 	const text = this.character()._char_text[1];
 	this._char_text.bitmap.clear();
+	this._char_text.bitmap.textColor = this.character()._char_text_color;
+	console.log(this._char_text.bitmap.textColor);
 	this._char_text.bitmap.drawText(text,0,0,135,32,"center");
+	
+	
 };
 
 //==============================

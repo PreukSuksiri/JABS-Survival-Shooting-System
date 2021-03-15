@@ -98,6 +98,7 @@ J.Base.Notetags = {
   MoveSpeed: "ms",
   NoIdle: "noIdle",
   NoHpBar: "noHpBar",
+  BossHpBar: "bossHpBar",
   Inanimate: "inanimate",
   Invincible: "invincible", // also on skills
   AlertDuration: "ad",
@@ -718,6 +719,27 @@ Game_Character.prototype.showHpBar = function() {
   }
   
   return showHpBar;
+};
+
+Game_Character.prototype.bossHpBar = function() {
+  if (!(this instanceof Game_Event)) return;
+
+  let bossHpBar = true;
+  const referenceData = this.event();
+
+  if (referenceData.meta && referenceData.meta[J.Base.Notetags.BossHpBar]) {
+    bossHpBar = false;
+  } else {
+    const structure =/<bossHpBar>/i;
+    const notedata = referenceData.note.split(/[\r\n]+/);
+    notedata.forEach(note => {
+      if (note.match(structure)) {
+        bossHpBar = false;
+      }
+    })
+  }
+
+  return bossHpBar;
 };
 
 /**

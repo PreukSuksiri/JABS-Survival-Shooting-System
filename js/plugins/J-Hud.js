@@ -1073,7 +1073,10 @@ Sprite_ActorValue.prototype.createBitmap = function() {
 							var weaponconsumeid = arrayResult[0];
 							var weapondata = $dataWeapons[itemconsumeid];
 										var weaponamount = $gameParty.numItems(weapondata);
-										
+										if (weaponconsumeid == this._j._actor._equips[0]._itemId)
+											{
+												weaponamount += 1;
+											}
 								   value = weaponamount;
 						}
 						else
@@ -1084,7 +1087,10 @@ Sprite_ActorValue.prototype.createBitmap = function() {
 								var armorconsumeid = arrayResult[0];
 								var armordata = $dataArmors[itemconsumeid];
 											var armoramount = $gameParty.numItems(armordata);
-											
+											if (armorconsumeid == this._j._actor._equips[0]._itemId)
+											{
+												armoramount += 1;
+											}
 									   value = armoramount;
 							}
 							else
@@ -1126,7 +1132,10 @@ Sprite_ActorValue.prototype.createBitmap = function() {
 							var weaponconsumeid = arrayResult[0];
 							var weapondata = $dataWeapons[weaponconsumeid];
 										var weaponamount = $gameParty.numItems(weapondata);
-										
+										if (weaponconsumeid == this._j._actor._equips[1]._itemId)
+											{
+												weaponamount += 1;
+											}
 								   value = weaponamount;
 						}
 						else
@@ -1137,7 +1146,10 @@ Sprite_ActorValue.prototype.createBitmap = function() {
 								var armorconsumeid = arrayResult[0];
 								var armordata = $dataArmors[armorconsumeid];
 											var armoramount = $gameParty.numItems(armordata);
-											
+											if (armorconsumeid == this._j._actor._equips[1]._itemId)
+											{
+												armoramount += 1;
+											}
 									   value = armoramount;
 							}
 							else
