@@ -5161,7 +5161,7 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
     if (!actions || !actions.length) return;
 
     actions.forEach(action => action.setCooldownType(Game_Actor.JABS_MAINHAND));
-    this.executeMapActions(battler, actions);
+	this.executeMapActions(battler, actions);
   };
 
   /**
@@ -5375,13 +5375,16 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 										collideOnTimeout = true;
 									  }
 									  
-									  if (comment.match(/<destroyWhenExamine'>/i)) {
+									  if (comment.match(/<destroyWhenExamine>/i)) {
 										
+										console.log($gamePlayer.direction() + " | " + action._actionSprite._y + " | " + action._actionSprite._x+ " | " + $gamePlayer.y+ " | " +$gamePlayer.x);
+											
 										if (Input.isPressed("ok")
 											&& ($gamePlayer.direction() == 2 && action._actionSprite._y == $gamePlayer.y+1 && action._actionSprite._x == $gamePlayer.x
 												|| $gamePlayer.direction() == 4 && action._actionSprite._x == $gamePlayer.x-1 && action._actionSprite._y == $gamePlayer.y
 												|| $gamePlayer.direction() == 6 && action._actionSprite._x == $gamePlayer.x+1 && action._actionSprite._y == $gamePlayer.y
-												|| $gamePlayer.direction() == 8 && action._actionSprite._y == $gamePlayer.y-1 && action._actionSprite._x == $gamePlayer.x)
+												|| $gamePlayer.direction() == 8 && action._actionSprite._y == $gamePlayer.y-1 && action._actionSprite._x == $gamePlayer.x
+												||(action._actionSprite._y == $gamePlayer.y && action._actionSprite._x == $gamePlayer.x))
 										)
 										  {
 											  this.cleanupAction(action);
@@ -6476,11 +6479,10 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
       // then check to see if this battler is now in range.
       } else {
         const sprite = battler.getCharacter();
-        let dx = actionSprite.x - sprite.x;
-        let dy = actionSprite.y - sprite.y;
-        dx = dx >= 0 ? Math.max(dx, 0) : Math.min(dx, 0);
-        dy = dy >= 0 ? Math.max(dy, 0) : Math.min(dy, 0);
-        const result = this.isTargetWithinRange(caster.direction(), dx, dy, range, shape);
+        
+        
+        
+        const result = this.isTargetWithinRange(caster, sprite, actionSprite, range, shape);
         if (result) {
           targetsHit.push(battler);
           hitOne = true;
@@ -6499,7 +6501,14 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
    * @param {number} range How big the collision shape is.
    * @param {string} shape The collision formula based on shape.
    */
-  isTargetWithinRange(facing, dx, dy, range, shape) {
+  isTargetWithinRange(caster,sprite,actionSprite, range, shape) {
+	 let facing = caster.direction();
+	 let dx = actionSprite.x - sprite.x;
+     let dy = actionSprite.y - sprite.y;
+	  dx = dx >= 0 ? Math.max(dx, 0) : Math.min(dx, 0);
+	  dy = dy >= 0 ? Math.max(dy, 0) : Math.min(dy, 0);
+	  
+	  
     let hit = false;
 
     switch (shape) {
@@ -6524,10 +6533,597 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
       case J.Base.Shapes.Cross:
         hit = this.collisionCross(dx, dy, range);
         break;
+	  case "limitedsquare":
+        hit = this.collisionLimitedSquare(caster,sprite,actionSprite, range);
+        break;	
     }
 
     return hit;
   };
+  
+  
+  
+  collisionLimitedSquare(caster,sprite,actionSprite, range) {
+	  var collisionMap = {};
+	
+	var bltOriginalX = caster.x;
+	var bltOriginalY = caster.y;
+
+	var bltEntityX = sprite.x;
+	var bltEntityY = sprite.y;
+	
+	var enmEntityX = actionSprite.x;
+	var enmEntityY = actionSprite.y;
+	
+	var fullRange = (range*2) + 1;
+	
+	var tempwll = "tempwll";
+	var wll = "wll";
+	var bltpath = "bltpath";
+	var enmpath = "enmpath";
+	
+	for(var m = 0 ; m < fullRange ; m++)
+	{
+		var realM = bltEntityX-range+m;
+		
+		collisionMap[realM] = {};
+		for(var n = 0 ; n < fullRange ; n++)
+		{
+			var realN = bltEntityY-range+n
+			collisionMap[realM][realN] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+		}
+	}
+	if (collisionMap[bltEntityX] != null && collisionMap[bltEntityX][bltEntityY] != null)
+	{
+		collisionMap[bltEntityX][bltEntityY][bltpath] = true;
+	}
+	if (collisionMap[enmEntityX] != null && collisionMap[enmEntityX][enmEntityY] != null)
+	{
+		collisionMap[enmEntityX][enmEntityY][enmpath] = true;
+	}
+	
+	/*
+	for(var m = 0 ; m < $gameMap.width() ; m++)
+	{
+		collisionMap[m] = {};
+		for(var n = 0 ; n < $gameMap.height() ; n++)
+		{
+			collisionMap[m][n] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+		}
+	}
+	*/
+	//=======BLT==================
+	//console.log($gameMap.width());
+
+
+			var hitwall = false;	
+					
+			
+			for(var i = 1 ; i <= range ; i++)
+			{
+			
+				//======Down================
+				//collisionMap[bltEntityX] = {};
+				//collisionMap[bltEntityX][bltEntityY + i] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+				
+				if (collisionMap[bltEntityX] != null && collisionMap[bltEntityX][bltEntityY + i] != null)
+				{
+					if (hitwall)
+					{
+						
+						collisionMap[bltEntityX][bltEntityY + i][tempwll] = true;
+						collisionMap[bltEntityX][bltEntityY + i][wll] = true;
+					
+					
+						for(var j = i ; j <= range ; j++)
+						{
+							//collisionMap[bltEntityX][bltEntityY + j] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+							if (collisionMap[bltEntityX] != null && collisionMap[bltEntityX][bltEntityY+j] != null)
+							{
+								collisionMap[bltEntityX][bltEntityY + j][tempwll] = true;
+							}
+							
+						
+						}
+						
+					}
+					else
+					{
+						if ($gameMap.terrainTag(bltEntityX, bltEntityY + i) == J.ABS.Metadata.BulletBlockTerrainTag)
+						{
+							hitwall = true;
+						}
+						else
+						{
+							collisionMap[bltEntityX][bltEntityY + i][bltpath] = true;
+						}
+					}
+				}
+				
+				hitwall = false;
+				
+				
+				
+				
+				//=====Up===================
+				
+				
+				//collisionMap[bltEntityX] = {};
+				//collisionMap[bltEntityX][bltEntityY - i] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+				if (collisionMap[bltEntityX] != null && collisionMap[bltEntityX][bltEntityY - i] != null)
+				{
+					if (hitwall)
+					{
+						collisionMap[bltEntityX][bltEntityY - i][tempwll] = true;
+						collisionMap[bltEntityX][bltEntityY - i][wll] = true;
+					
+					
+						for(var j = i ; j <= range ; j++)
+						{
+							//collisionMap[bltEntityX][bltEntityY - j] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+							if (collisionMap[bltEntityX] != null && collisionMap[bltEntityX][bltEntityY-j] != null)
+							{
+								collisionMap[bltEntityX][bltEntityY - j][tempwll] = true;
+							}
+							
+						
+						}
+						
+					}
+					else
+					{
+						if ($gameMap.terrainTag(bltEntityX, bltEntityY - i) == J.ABS.Metadata.BulletBlockTerrainTag)
+						{
+							hitwall = true;
+						}
+						else
+						{
+							collisionMap[bltEntityX][bltEntityY - i][bltpath] = true;
+						}
+					}
+				}
+				
+				
+				hitwall = false;
+				
+				
+				
+				//=============Right======================
+				
+				//collisionMap[bltEntityX + i] = {};
+				//collisionMap[bltEntityX + i][bltEntityY] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+				if (collisionMap[bltEntityX + i] != null && collisionMap[bltEntityX + i][bltEntityY] != null)
+				{
+					if (hitwall)
+					{
+						collisionMap[bltEntityX+i][bltEntityY][tempwll] = true;
+						collisionMap[bltEntityX+i][bltEntityY ][wll] = true;
+					
+					
+						for(var j = i ; j <= range ; j++)
+						{
+							//collisionMap[bltEntityX + j][bltEntityY] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+							if (collisionMap[bltEntityX+j] != null && collisionMap[bltEntityX+j][bltEntityY] != null)
+							{
+								collisionMap[bltEntityX+j][bltEntityY][tempwll] = true;
+							}
+							
+						
+						}
+						
+					}
+					else
+					{
+						if ($gameMap.terrainTag(bltEntityX+i,bltEntityY) == J.ABS.Metadata.BulletBlockTerrainTag)
+						{
+							hitwall = true;
+						}
+						else
+						{
+							collisionMap[bltEntityX+i][bltEntityY][bltpath] = true;
+						}
+					}
+				}
+				
+				hitwall = false;
+				
+				
+				
+				//===========Left===================
+				
+				//collisionMap[bltEntityX - i] = {};
+				//collisionMap[bltEntityX - i][bltEntityY] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+				if (collisionMap[bltEntityX - i] != null && collisionMap[bltEntityX - i][bltEntityY] != null)
+				{
+					if (hitwall)
+					{
+						collisionMap[bltEntityX-i][bltEntityY][tempwll] = true;
+						collisionMap[bltEntityX-i][bltEntityY ][wll] = true;
+					
+					
+						for(var j = i ; j <= range ; j++)
+						{
+							//collisionMap[bltEntityX - j][bltEntityY] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+							if (collisionMap[bltEntityX-j] != null && collisionMap[bltEntityX-j][bltEntityY] != null)
+							{
+								collisionMap[bltEntityX-j][bltEntityY][tempwll] = true;
+							}
+							
+						
+						}
+						
+					}
+					else
+					{
+						if ($gameMap.terrainTag(bltEntityX-i, bltEntityY) == J.ABS.Metadata.BulletBlockTerrainTag)
+						{
+							hitwall = true;
+						}
+						else
+						{
+							collisionMap[bltEntityX-i][bltEntityY][bltpath] = true;
+						}
+					}
+				}
+				
+				
+				hitwall = false;
+				
+				
+				
+				//===========Top-left=================
+				
+				
+				//collisionMap[bltEntityX - i] = {};
+				//collisionMap[bltEntityX - i][bltEntityY - i] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+			
+				if (collisionMap[bltEntityX - i] != null && collisionMap[bltEntityX - i][bltEntityY - i] != null)
+				{
+					if (hitwall)
+					{
+						collisionMap[bltEntityX-i][bltEntityY-i][tempwll] = true;
+						collisionMap[bltEntityX-i][bltEntityY -i][wll] = true;
+					
+					
+						for(var j = i ; j <= range ; j++)
+						{
+							//collisionMap[bltEntityX - j][bltEntityY - j] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+							if (collisionMap[bltEntityX-j] != null && collisionMap[bltEntityX-j][bltEntityY-j] != null)
+							{
+								collisionMap[bltEntityX-j][bltEntityY-j][tempwll] = true;
+							}
+							
+						
+						}
+						
+						
+						
+					}
+					else
+					{
+						if ($gameMap.terrainTag(bltEntityX-i, bltEntityY -i) == J.ABS.Metadata.BulletBlockTerrainTag 
+							|| $gameMap.terrainTag(bltEntityX-i+1, bltEntityY -i) == J.ABS.Metadata.BulletBlockTerrainTag 
+							|| $gameMap.terrainTag(bltEntityX-i, bltEntityY +i) == J.ABS.Metadata.BulletBlockTerrainTag )
+						{
+							hitwall = true;
+							collisionMap[bltEntityX-i][bltEntityY-i][wll] = true;
+						}
+						else
+						{
+							collisionMap[bltEntityX-i][bltEntityY-i][bltpath] = true;
+						}
+					
+					
+					}
+				}
+				
+				hitwall = false;
+				
+				
+				
+				
+				
+				//===========Top-right====================
+			
+			
+			//collisionMap[bltEntityX + i] = {};
+				//collisionMap[bltEntityX + i][bltEntityY - i] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+				if (collisionMap[bltEntityX + i] != null && collisionMap[bltEntityX + i][bltEntityY - i] != null)
+				{
+					if (hitwall)
+					{
+						collisionMap[bltEntityX+i][bltEntityY-i][tempwll] = true;
+						collisionMap[bltEntityX+i][bltEntityY -i][wll] = true;
+					
+					
+						for(var j = i ; j <= range ; j++)
+						{
+							//collisionMap[bltEntityX + j][bltEntityY - j] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+							if (collisionMap[bltEntityX+j] != null && collisionMap[bltEntityX+j][bltEntityY-j] != null)
+							{
+								collisionMap[bltEntityX+j][bltEntityY-j][tempwll] = true;
+							}
+							
+							
+						
+						}
+						
+						
+						
+					}
+					else
+					{
+						if ($gameMap.terrainTag(bltEntityX+i, bltEntityY -i) == J.ABS.Metadata.BulletBlockTerrainTag 
+							|| $gameMap.terrainTag(bltEntityX+i-1, bltEntityY -i) == J.ABS.Metadata.BulletBlockTerrainTag 
+							|| $gameMap.terrainTag(bltEntityX+i, bltEntityY -i+1) == J.ABS.Metadata.BulletBlockTerrainTag )
+						{
+							hitwall = true;
+							collisionMap[bltEntityX+i][bltEntityY-i][wll] = true;
+						}
+						else
+						{
+							collisionMap[bltEntityX+i][bltEntityY-i][bltpath] = true;
+						}
+					
+					
+					}
+				}
+				
+				hitwall = false;
+				
+				
+				
+				//=========Bottom-right============
+				
+			//collisionMap[bltEntityX + i] = {};
+				//collisionMap[bltEntityX + i][bltEntityY + i] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+				if (collisionMap[bltEntityX + i] != null && collisionMap[bltEntityX + i][bltEntityY + i] != null)
+				{
+					if (hitwall)
+					{
+						collisionMap[bltEntityX+i][bltEntityY+i][tempwll] = true;
+						collisionMap[bltEntityX+i][bltEntityY +i][wll] = true;
+					
+					
+						for(var j = i ; j <= range ; j++)
+						{
+							//collisionMap[bltEntityX + j][bltEntityY + j] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+							if (collisionMap[bltEntityX+j] != null && collisionMap[bltEntityX+j][bltEntityY+j] != null)
+							{
+								collisionMap[bltEntityX+j][bltEntityY+j][tempwll] = true;
+							}
+							
+							
+						
+						}
+						
+						
+						
+					}
+					else
+					{
+						if ($gameMap.terrainTag(bltEntityX+i, bltEntityY +i) == J.ABS.Metadata.BulletBlockTerrainTag 
+							|| $gameMap.terrainTag(bltEntityX+i-1, bltEntityY +i) == J.ABS.Metadata.BulletBlockTerrainTag 
+							|| $gameMap.terrainTag(bltEntityX+i, bltEntityY +i-1) == J.ABS.Metadata.BulletBlockTerrainTag )
+						{
+							hitwall = true;
+							collisionMap[bltEntityX+i][bltEntityY+i][wll] = true;
+						}
+						else
+						{
+							collisionMap[bltEntityX+i][bltEntityY+i][bltpath] = true;
+						}
+					
+					
+					}
+				}
+				
+				hitwall = false;
+				
+				
+				
+				//=========Bottom-left==================
+				
+				
+			//collisionMap[bltEntityX - i] = {};
+				//collisionMap[bltEntityX - i][bltEntityY + i] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+				if (collisionMap[bltEntityX - i] != null && collisionMap[bltEntityX - i][bltEntityY + i] != null)
+				{
+					if (hitwall)
+					{
+						collisionMap[bltEntityX-i][bltEntityY+i][tempwll] = true;
+						collisionMap[bltEntityX-i][bltEntityY +i][wll] = true;
+					
+					
+						for(var j = i ; j <= range ; j++)
+						{
+							//collisionMap[bltEntityX - j][bltEntityY + j] = {tempwll:false,wll:false,bltpath:false,enmpath:false};
+							if (collisionMap[bltEntityX-j] != null && collisionMap[bltEntityX-j][bltEntityY+j] != null)
+							{
+								collisionMap[bltEntityX-j][bltEntityY+j][tempwll] = true;
+							}
+							
+						
+						}
+						
+						
+						
+					}
+					else
+					{
+						if ($gameMap.terrainTag(bltEntityX-i,bltEntityY +i) == J.ABS.Metadata.BulletBlockTerrainTag 
+							|| $gameMap.terrainTag(bltEntityX-i+1, bltEntityY +i) == J.ABS.Metadata.BulletBlockTerrainTag 
+							|| $gameMap.terrainTag(bltEntityX-i, bltEntityY +i-1) == J.ABS.Metadata.BulletBlockTerrainTag )
+						{
+							hitwall = true;
+							collisionMap[bltEntityX-i][bltEntityY+i][wll] = true;
+						}
+						else
+						{
+							collisionMap[bltEntityX-i][bltEntityY+i][bltpath] = true;
+						}
+					
+					
+					}
+				}
+				
+				hitwall = false;
+				
+				
+			}
+			
+			
+			
+			
+
+	//=====ENM===============================================
+		
+		
+
+				var countCollision = 0;
+				
+			
+			for(var i = 0 ; i <= range ; i++)
+			{
+				
+				//=====Down============
+				if (collisionMap[enmEntityX] != null && collisionMap[enmEntityX][enmEntityY + i] != null)
+				{
+					if (collisionMap[enmEntityX][enmEntityY + i][wll] == true)
+					{
+						if (enmEntityY < bltEntityY && (enmEntityY + i) < bltEntityY)
+						{
+							countCollision-=20;
+							break;
+						}
+						
+						
+					}
+					else
+					{
+						collisionMap[enmEntityX][enmEntityY + i][enmpath] = true;
+					}
+					
+					
+					if (collisionMap[enmEntityX][enmEntityY + i][enmpath] == true && collisionMap[enmEntityX][enmEntityY + i][bltpath] == true)
+					{
+						countCollision+=10;
+						break;
+					}
+				}
+				
+				
+				
+				
+				
+				//======Up=============
+				if (collisionMap[enmEntityX] != null && collisionMap[enmEntityX][enmEntityY - i] != null)
+				{
+					if (collisionMap[enmEntityX][enmEntityY - i][wll] == true)
+					{
+						if (enmEntityY > bltEntityY && (enmEntityY - i) > bltEntityY)
+						{
+							countCollision-=20;
+							break;
+						}
+						
+						
+					}
+					else
+					{
+						collisionMap[enmEntityX][enmEntityY - i][enmpath] = true;
+					}
+					
+					
+					if (collisionMap[enmEntityX][enmEntityY - i][enmpath] == true && collisionMap[enmEntityX][enmEntityY - i][bltpath] == true)
+					{
+						countCollision+=10;
+						break;
+					}
+				}
+				
+				
+				
+				
+				
+				//==============Right=================
+				if (collisionMap[enmEntityX + i] != null && collisionMap[enmEntityX + i][enmEntityY] != null)
+				{
+					if (collisionMap[enmEntityX + i][enmEntityY][wll] == true)
+					{
+						if (enmEntityX < bltEntityX && (enmEntityX + i) < bltEntityX)
+						{
+							countCollision-=20;
+							break;
+						}
+						
+						
+					}
+					else
+					{
+						collisionMap[enmEntityX + i][enmEntityY][enmpath] = true;
+					}
+					
+					
+					if (collisionMap[enmEntityX + i][enmEntityY][enmpath] == true && collisionMap[enmEntityX + i][enmEntityY][bltpath] == true)
+					{
+						countCollision+=10;
+						break;
+					}
+				}
+				
+				
+				
+				
+				//============Left==============
+				if (collisionMap[enmEntityX - i] != null && collisionMap[enmEntityX - i][enmEntityY] != null)
+				{
+					if (collisionMap[enmEntityX - i][enmEntityY][wll] == true)
+					{
+						if (enmEntityX > bltEntityX && (enmEntityX - i) > bltEntityX)
+						{
+							countCollision-=20;
+							break;
+						}
+						
+						
+					}
+					else
+					{
+						collisionMap[enmEntityX - i][enmEntityY][enmpath] = true;
+					}
+					
+					if (collisionMap[enmEntityX - i][enmEntityY][enmpath] == true && collisionMap[enmEntityX - i][enmEntityY][bltpath] == true)
+					{
+						countCollision+=10;
+						break;
+					}
+				}
+				
+				
+				
+				
+				
+				
+				
+			}
+			console.log(countCollision);
+			console.log(collisionMap);
+			if (countCollision >= 20)
+			{
+				
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+	
+	  
+ };
+  
+  
+  
 
   /**
    * A rhombus-shaped (aka diamond) collision.
