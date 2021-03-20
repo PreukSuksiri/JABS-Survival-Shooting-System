@@ -5377,14 +5377,23 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
 									  
 									  if (comment.match(/<destroyWhenExamine>/i)) {
 										
-										console.log($gamePlayer.direction() + " | " + action._actionSprite._y + " | " + action._actionSprite._x+ " | " + $gamePlayer.y+ " | " +$gamePlayer.x);
 											
 										if (Input.isPressed("ok")
 											&& ($gamePlayer.direction() == 2 && action._actionSprite._y == $gamePlayer.y+1 && action._actionSprite._x == $gamePlayer.x
 												|| $gamePlayer.direction() == 4 && action._actionSprite._x == $gamePlayer.x-1 && action._actionSprite._y == $gamePlayer.y
 												|| $gamePlayer.direction() == 6 && action._actionSprite._x == $gamePlayer.x+1 && action._actionSprite._y == $gamePlayer.y
-												|| $gamePlayer.direction() == 8 && action._actionSprite._y == $gamePlayer.y-1 && action._actionSprite._x == $gamePlayer.x
-												||(action._actionSprite._y == $gamePlayer.y && action._actionSprite._x == $gamePlayer.x))
+												|| $gamePlayer.direction() == 8 && action._actionSprite._y == $gamePlayer.y-1 && action._actionSprite._x == $gamePlayer.x)
+										)
+										  {
+											  this.cleanupAction(action);
+										  }
+									  }
+									  
+									  if (comment.match(/<destroyWhenExamineUnderfoot>/i)) {
+										
+											
+										if (Input.isPressed("ok")
+											&& (action._actionSprite._y == $gamePlayer.y && action._actionSprite._x == $gamePlayer.x)
 										)
 										  {
 											  this.cleanupAction(action);
