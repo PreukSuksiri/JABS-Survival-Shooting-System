@@ -5710,9 +5710,9 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
       actionEventData.y = caster.getY();
       actionEventData.isAction = true;
       actionEventData.id += 1000;
-
+		this.addActionEvent(action);
       this.addMapActionToMap(actionEventData, action);
-      this.addActionEvent(action);
+      
     }
   };
 
@@ -6014,6 +6014,7 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
    * @param {JABS_Battler} target The target having the action applied against.
    */
   applyPrimaryBattleEffects(action, target) {
+	  
     const targetSprite = target.getCharacter();
     const targetUuid = target.getUuid();
     const skill = action.getBaseSkill();
@@ -6054,6 +6055,7 @@ if (Input.isTriggered(J.ABS.Input.TAB)) {
     const damagePop = this.configureDamagePop(gameAction, skill, casterMapBattler, target);
     targetSprite.addTextPop(damagePop);
     targetSprite.setRequestTextPop();
+	
   };
 
   /**
