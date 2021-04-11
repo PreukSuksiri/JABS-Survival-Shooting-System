@@ -128,8 +128,6 @@
   * @option 8
  * @option 9
  * @option 0
- * @option -
- * @option =
  * @option TAB
  *
   * @command Set JABS Common Event
@@ -150,8 +148,6 @@
   * @option 8
  * @option 9
  * @option 0
- * @option -
- * @option =
  * @option TAB
  *
  * @command Read Monster HP
@@ -727,10 +723,38 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Count Monster", args => {
 			var arrayTagIncluded = eval(TagIncluded);
 			for (var t in arrayTagIncluded)
 			{
+				/*
 				if (arrayTagIncluded[t] != null && arrayTagIncluded[t] != "" && thisEvent.note.indexOf(arrayTagIncluded[t]) < 0)
 				{
 					allow = false;
 				}
+				
+				*/
+					try
+					{
+
+						var commandList = thisEvent.pages[$gameMap._j._allBattlers[b]._event._pageIndex].list; //thisEvent.list()
+						if (commandList != null)
+					  {
+						  commandList.forEach(command => {
+							if (command.code == 408) {
+							  const comment = command.parameters[0];
+
+							  if (comment.indexOf(arrayTagExcluded[t]) < 0) {
+								
+								allow = false;
+							  }
+							  
+							}
+						  });
+					  }
+					  
+					}
+					catch (ex)
+					{
+						console.log(ex);
+					}
+				
 			}
 		}
 		
@@ -739,10 +763,38 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Count Monster", args => {
 			var arrayTagExcluded = eval(TagExcluded);
 			for (var t in arrayTagExcluded)
 			{
+				/*
 				if (arrayTagExcluded[t] != null && arrayTagExcluded[t] != "" && thisEvent.note.indexOf(arrayTagExcluded[t]) >= 0)
 				{
 					allow = false;
 				}
+				*/
+				
+					try
+					{
+						var commandList = thisEvent.pages[$gameMap._j._allBattlers[b]._event._pageIndex].list;
+						if (commandList != null)
+					  {
+						  commandList.forEach(command => {
+							if (command.code == 408) {
+							  const comment = command.parameters[0];
+
+							  if (comment.indexOf(arrayTagExcluded[t]) >= 0) {
+								
+								allow = false;
+							  }
+							  
+							}
+						  });
+					  }
+					}
+					catch (ex)
+					{
+						console.log(ex);
+					}
+				
+				 
+				
 			}
 		}
 		
@@ -920,6 +972,8 @@ Input.gamepadMapper = {
  * Extends the existing mapper for keyboards to accommodate for the
  * additional skill inputs that are used for gamepads.
  */
+ 
+ 
 Input.keyMapper = {
   ...Input.keyMapper,
 
@@ -949,7 +1003,7 @@ Input.keyMapper = {
 	57: J.ABS.Input.Num9,
 	48: J.ABS.Input.Num0,
 	45: J.ABS.Input.NumMinus,
-	61: J.ABS.Input.NumEqual,
+	61: J.ABS.Input.NumEqual
 };
 //#endregion
 //#endregion Static objects
@@ -968,6 +1022,8 @@ Game_Actor.JABS_NUM7_SKILL = "Num7";
 Game_Actor.JABS_NUM8_SKILL = "Num8";
 Game_Actor.JABS_NUM9_SKILL = "Num9";
 Game_Actor.JABS_NUM0_SKILL = "Num0";
+Game_Actor.JABS_NUMMINUS_SKILL = "NumMinus";
+Game_Actor.JABS_NUMEQUAL_SKILL = "NumEqual";
 
 /**
  * Adds in the jabs tracking object for equipped skills.
@@ -5062,7 +5118,7 @@ class Game_BattleMap {
       
       return;
     }
-if (Input.isTriggered(J.ABS.Input.TAB)) {
+if (Input.isTriggered(J.ABS.Input.Tab)) {
       this.performSkillAction(13);
 	  if ($gamePlayer.COMMONEVENT_TAB != null)
 	  {

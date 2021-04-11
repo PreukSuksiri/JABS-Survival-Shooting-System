@@ -46,7 +46,7 @@ null,
 {"id":44,"list":[{"code":0,"indent":0,"parameters":[]}],"name":"","switchId":1,"trigger":0},
 {"id":45,"list":[{"code":250,"indent":0,"parameters":[{"name":"Earth1","volume":70,"pitch":150,"pan":0}]},{"code":123,"indent":0,"parameters":["A",0]},{"code":0,"indent":0,"parameters":[]}],"name":"Barricade Wood Die","switchId":1,"trigger":0},
 {"id":46,"list":[{"code":250,"indent":0,"parameters":[{"name":"Break","volume":70,"pitch":150,"pan":0}]},{"code":123,"indent":0,"parameters":["A",0]},{"code":0,"indent":0,"parameters":[]}],"name":"Barricade Ceramic Die","switchId":1,"trigger":0},
-{"id":47,"list":[{"code":0,"indent":0,"parameters":[]}],"name":"","switchId":1,"trigger":0},
+{"id":47,"list":[{"code":213,"indent":0,"parameters":[-1,3,false]},{"code":0,"indent":0,"parameters":[]}],"name":"Display Emotion","switchId":1,"trigger":0},
 {"id":48,"list":[{"code":0,"indent":0,"parameters":[]}],"name":"","switchId":1,"trigger":0},
 {"id":49,"list":[{"code":0,"indent":0,"parameters":[]}],"name":"","switchId":1,"trigger":0},
 {"id":50,"list":[{"code":0,"indent":0,"parameters":[]}],"name":"","switchId":1,"trigger":0}
